@@ -28,6 +28,10 @@
 #define DEBUG_LED_PIN                    NRF_GPIO_PIN_MAP(0,12)                 // not functional on revA design
 #define BLE_LED_PIN                      NRF_GPIO_PIN_MAP(0,13)                 // 0 to turn on, 1 to turn off
 
+// DEBUG_UART
+#define UART_TX_PIN                      NRF_GPIO_PIN_MAP(0, 6)
+#define UART_RX_PIN                      NRF_GPIO_PIN_MAP(0, 8)
+
 // QSPI
 // These are located in sdk_config.h. They're placed here just for reference.
 // #define NRFX_QSPI_PIN_SCK                NRF_GPIO_PIN_MAP(0, 19)
@@ -36,7 +40,7 @@
 // #define NRFX_QSPI_PIN_IO1                NRF_GPIO_PIN_MAP(0, 21)
 // #define NRFX_QSPI_PIN_IO2                NRF_GPIO_PIN_MAP(0, 22)
 // #define NRFX_QSPI_PIN_IO3                NRF_GPIO_PIN_MAP(0, 23)
-#define FLASH_EN_PIN                     NRF_GPIO_PIN_MAP(0,16)
+// #define FLASH_EN_PIN                     NRF_GPIO_PIN_MAP(0,16)
 
 // Wrapper
 #define GPIO_INTERRUPT_CONFIG_RISING  GPIOTE_CONFIG_IN_SENSE_LOTOHI(true)

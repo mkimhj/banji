@@ -74,8 +74,11 @@ void delayMs(uint32_t delay)
 void timersInit(void)
 {
   // Initialize timer module.
-  ret_code_t err_code = app_timer_init();
-  APP_ERROR_CHECK(err_code);
+  ret_code_t ret = nrf_drv_clock_init();
+  APP_ERROR_CHECK(ret);
+  nrf_drv_clock_lfclk_request(NULL);
+  ret = app_timer_init();
+  APP_ERROR_CHECK(ret);
 
   systemTimerInit();
 

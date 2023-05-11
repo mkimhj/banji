@@ -1,5 +1,5 @@
 /*
- * shio
+ * banji
  * maruchi kim
  */
 
@@ -45,8 +45,21 @@
 #include "flash.h"
 #include "main.h"
 
+#include "boards.h"
 #include "nrf_ppi.h"
 #include "nrf_timer.h"
+#include "nrf_cli.h"
+#include "nrf_cli_types.h"
+#include "nrf_cli_libuarte.h"
+
+#define CLI_EXAMPLE_LOG_QUEUE_SIZE (4)
+
+NRF_CLI_LIBUARTE_DEF(m_cli_libuarte_transport, 256, 256);
+NRF_CLI_DEF(m_cli_libuarte,
+            "banji] ",
+            &m_cli_libuarte_transport.transport,
+            '\r',
+            CLI_EXAMPLE_LOG_QUEUE_SIZE);
 
 APP_TIMER_DEF(resetTimer);
 
@@ -94,8 +107,6 @@ void powerEnterSleepMode(void)
   gpioWrite(MIC_EN_PIN, 0);
   gpioOutputEnable(ACCEL_EN_PIN);
   gpioWrite(ACCEL_EN_PIN, 0);
-  gpioOutputEnable(FLASH_EN_PIN);
-  gpioWrite(FLASH_EN_PIN, 0);
 
   spiDeInit();
   delayMs(1);
@@ -151,10 +162,8 @@ static void buttons_leds_init(void)
 
 static void logInit(void)
 {
-  ret_code_t err_code = NRF_LOG_INIT(NULL);
+  ret_code_t err_code = NRF_LOG_INIT(app_timer_cnt_get);
   APP_ERROR_CHECK(err_code);
-
-  NRF_LOG_DEFAULT_BACKENDS_INIT();
 }
 
 static void powerInit(void)
@@ -172,17 +181,48 @@ static void idle(void)
   }
 }
 
-static void shioInit(void)
+static void cli_start(void)
 {
-  bool erase_bonds;
+  ret_code_t ret;
 
+  ret = nrf_cli_start(&m_cli_libuarte);
+  APP_ERROR_CHECK(ret);
+}
+
+static void cli_init(void)
+{
+  ret_code_t ret;
+
+  cli_libuarte_config_t libuarte_config;
+  libuarte_config.tx_pin = UART_TX_PIN;
+  libuarte_config.rx_pin = UART_RX_PIN;
+  libuarte_config.baudrate = NRF_UARTE_BAUDRATE_115200;
+  libuarte_config.parity = NRF_UARTE_PARITY_EXCLUDED;
+  libuarte_config.hwfc = NRF_UARTE_HWFC_DISABLED;
+  ret = nrf_cli_init(&m_cli_libuarte, &libuarte_config, true, true, NRF_LOG_SEVERITY_INFO);
+
+  APP_ERROR_CHECK(ret);
+}
+
+static void cli_process(void)
+{
+  nrf_cli_process(&m_cli_libuarte);
+}
+
+static void banjiInit(void)
+{
   logInit();
-  NRF_LOG_RAW_INFO("%08d [shio] booting...\n", systemTimeGetMs());
+  NRF_LOG_RAW_INFO("%08d [banji] booting...\n", systemTimeGetMs());
 
   timersInit();
   ret_code_t err_code;
   err_code = app_timer_create(&resetTimer, APP_TIMER_MODE_SINGLE_SHOT, resetTimerCallback);
   APP_ERROR_CHECK(err_code);
+
+  cli_init();
+  cli_start();
+
+  NRF_LOG_RAW_INFO("Press the Tab key to see all available commands.\n");
 
   gpioInit();
 
@@ -193,15 +233,12 @@ static void shioInit(void)
   // accelInit();
   // accelGenericInterruptEnable(&accelInterrupt1);
 
-  APP_ERROR_CHECK(nrf_drv_clock_init());
   powerInit();
-  gpioOutputEnable(FLASH_EN_PIN);
-  gpioWrite(FLASH_EN_PIN, 0);
 
   bleInit();
   bleAdvertisingStart();
 
-  NRF_LOG_RAW_INFO("%08d [shio] booted\n", systemTimeGetMs());
+  NRF_LOG_RAW_INFO("%08d [banji] booted\n", systemTimeGetMs());
 }
 
 static void processQueue(void)
@@ -282,10 +319,11 @@ static void processQueue(void)
 
 int main(void)
 {
-  shioInit();
+  banjiInit();
 
   for (;;)
   {
+    cli_process();
     idle();
     processQueue();
   }

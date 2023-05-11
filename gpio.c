@@ -24,6 +24,8 @@ void gpioInit(void)
   gpioWrite(GPIO_1_PIN, 0);
   gpioOutputEnable(GPIO_3_PIN);
   gpioWrite(GPIO_3_PIN, 0);
+  gpioOutputEnable(BLE_LED_PIN);
+  gpioWrite(BLE_LED_PIN, 0);
 }
 
 void gpioOutputEnable(gpioPin_t pin)
