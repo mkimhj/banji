@@ -126,6 +126,9 @@ SRC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_rtc.c \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_timer.c \
 	$(SDK_ROOT)/components/libraries/ringbuf/nrf_ringbuf.c \
+	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twi.c \
+  $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twim.c \
+	$(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
 
 
 # Include folders common to all targets

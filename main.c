@@ -42,6 +42,7 @@
 #include "gpio.h"
 #include "accel.h"
 #include "spi.h"
+#include "i2c.h"
 #include "flash.h"
 #include "main.h"
 
@@ -52,9 +53,9 @@
 #include "nrf_cli_types.h"
 #include "nrf_cli_libuarte.h"
 
-#define CLI_EXAMPLE_LOG_QUEUE_SIZE (4)
+#define CLI_EXAMPLE_LOG_QUEUE_SIZE (6)
 
-NRF_CLI_LIBUARTE_DEF(m_cli_libuarte_transport, 256, 256);
+NRF_CLI_LIBUARTE_DEF(m_cli_libuarte_transport, 512, 512);
 NRF_CLI_DEF(m_cli_libuarte,
             "banji] ",
             &m_cli_libuarte_transport.transport,
@@ -229,6 +230,7 @@ static void banjiInit(void)
   eventQueueInit();
   buttons_leds_init();
 
+  i2c_init();
   spiInit();
   // accelInit();
   // accelGenericInterruptEnable(&accelInterrupt1);
@@ -328,3 +330,35 @@ int main(void)
     processQueue();
   }
 }
+
+static void cmd_i2c_scan(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  i2c_scan();
+}
+
+static void cmd_i2c(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  ASSERT(p_cli);
+  ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
+
+  if ((argc == 1) || nrf_cli_help_requested(p_cli))
+  {
+    nrf_cli_help_print(p_cli, NULL, 0);
+    return;
+  }
+
+  if (argc != 2)
+  {
+    nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: bad parameter count\n", argv[0]);
+    return;
+  }
+
+  nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
+}
+
+NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_i2c)
+{
+    NRF_CLI_CMD(scan, NULL, "Print all entered parameters.", cmd_i2c_scan),
+    NRF_CLI_SUBCMD_SET_END
+};
+NRF_CLI_CMD_REGISTER(i2c, &m_sub_i2c, "i2c", cmd_i2c);
