@@ -3,9 +3,9 @@
 #include "nrf_drv_gpiote.h"
 
 // PDM
-#define MIC_EN_PIN                       NRF_GPIO_PIN_MAP(0, 15)
-#define PDM_CLK_PIN                      NRF_GPIO_PIN_MAP(1,8)
-#define PDM_DATA_PIN                     NRF_GPIO_PIN_MAP(1,9)
+// #define MIC_EN_PIN                       NRF_GPIO_PIN_MAP(0, 15)
+// #define PDM_CLK_PIN                      NRF_GPIO_PIN_MAP(1,8)
+// #define PDM_DATA_PIN                     NRF_GPIO_PIN_MAP(1,9)
 
 // SPI
 #define SPI_SCK_PIN                      NRF_GPIO_PIN_MAP(0,5)
@@ -22,7 +22,7 @@
 #define GPIO_1_PIN                       NRF_GPIO_PIN_MAP(0, 5)
 // #define GPIO_2_PIN                       NRF_GPIO_PIN_MAP(0, 6)
 #define GPIO_3_PIN                       NRF_GPIO_PIN_MAP(0, 7)
-#define GPIO_4_PIN                       NRF_GPIO_PIN_MAP(0, 8)
+// #define GPIO_4_PIN                       NRF_GPIO_PIN_MAP(0, 8)
 
 // LED
 #define DEBUG_LED_PIN                    NRF_GPIO_PIN_MAP(0,12)                 // not functional on revA design
