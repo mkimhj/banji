@@ -28,6 +28,13 @@
 #define I2C_SCL_PIN                       NRF_GPIO_PIN_MAP(0, 27)
 #define I2C_SDA_PIN                       NRF_GPIO_PIN_MAP(0, 26)
 
+// CAMERA (TODO: Revisit these, getting it to compile for now)
+#define CAM_POWER                        NRF_GPIO_PIN_MAP(0, 18)
+#define CAM_SPI_CS                       NRF_GPIO_PIN_MAP(0, 29)
+#define CAM_SCLK                         NRF_GPIO_PIN_MAP(0, 19)
+#define CAM_MOSI                         NRF_GPIO_PIN_MAP(0, 20)
+#define CAM_MISO                         NRF_GPIO_PIN_MAP(0, 30) // dead pin, just need to provide SDK a value
+
 // QSPI
 // These are located in sdk_config.h. They're placed here just for reference.
 #define NRFX_QSPI_PIN_SCK                NRF_GPIO_PIN_MAP(0, 19) // Camera PCLK
