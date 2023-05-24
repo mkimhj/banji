@@ -86,6 +86,7 @@ SRC_FILES += \
   $(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pdm.c \
   $(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
+	$(PROJ_DIR)/sdk_patch/nrfx_spis.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp.c \
   $(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
   $(PROJ_DIR)/$(wildcard *.c) \
@@ -255,6 +256,7 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/libraries/libuarte \
 	$(SDK_ROOT)/components/libraries/ringbuf \
 	$(SDK_ROOT)/components/libraries/log/src \
+	$(SDK_ROOT)/modules/nrfx/drivers/src/prs \
 
 # Libraries common to all targets
 LIB_FILES += \
