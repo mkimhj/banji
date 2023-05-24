@@ -8,9 +8,6 @@
 #ifndef HM01B0REGS_H_
 #define HM01B0REGS_H_
 
-#define EXAMPLE_I2C_MASTER (Driver_I2C0)
-#define EXAMPLE_I2C_SLAVE (Driver_I2C1)
-
 /**#############################Registers#############################**/
 //Sensor ID
 #define REG_MODEL_ID_H      0x0000
@@ -34,7 +31,6 @@
 #define REG_FRAME_LENGTH_PCK_L          0x0343
 
 //Bining mode control
-
 
 //Test pattern control
 #define REG_TEST_PATTERN_MODE       0x0601
@@ -60,7 +56,6 @@
 
 //Automatic exposure gain control
 
-
 //Motion detection control
 
 //Sensor timing control
@@ -70,7 +65,6 @@
 #define REG_ADVANCE_VSYNC               0x3022
 #define REG_ADVANCE_HSYNC               0x3023
 #define REG_EARLY_GAIN                  0x3035
-
 
 //IO and clock control
 #define REG_BIT_CONTROL                 0x3059
@@ -85,8 +79,6 @@
 
 
 //I2C slave registers
-
-
 /**#############################Modes#############################**/
 #define MODE_STAND_BY       0x00
 #define MODE_STREAMING      0x01
@@ -96,10 +88,8 @@
 #define ORIENTATION_HORINONTAL  0x00
 #define ORIENTATION_VERTICAL  0x01
 
-
 #define TEST_PATTERN_OFF            0x00
 #define TEST_PATTERN_COLOR_BAR      0x01
 #define TEST_PATTERN_WALKING_1      0x11
-
 
 #endif /* IMAGESENSOR_HM01B0REGS_H_ */

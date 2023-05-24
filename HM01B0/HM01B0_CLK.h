@@ -24,9 +24,7 @@
 
 #include "HM01B0_BLE_DEFINES.h"
 
-static nrf_drv_timer_t CAM_TIMER = NRF_DRV_TIMER_INSTANCE(1);
-
-static void timer_dummy_handler(nrf_timer_event_t event_type, void * p_context){}
+static nrf_drv_timer_t CAM_TIMER = NRF_DRV_TIMER_INSTANCE(3);
 
 void hm_clk_out(void);
 

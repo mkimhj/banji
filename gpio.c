@@ -15,17 +15,20 @@ void gpioInit(void)
   err_code = nrf_drv_gpiote_init();
   APP_ERROR_CHECK(err_code);
 
-  // nrf_drv_gpiote_out_config_t out_config = GPIOTE_CONFIG_OUT_SIMPLE(false);
+  // gpioOutputEnable(GPIO_1_PIN);
+  // gpioWrite(GPIO_1_PIN, 0);
+  // gpioOutputEnable(GPIO_3_PIN);
+  // gpioWrite(GPIO_3_PIN, 0);
+  // gpioOutputEnable(BLE_LED_PIN);
+  // gpioWrite(BLE_LED_PIN, 0);
 
-  // err_code = nrf_drv_gpiote_out_init(PIN_OUT, &out_config);
-  // APP_ERROR_CHECK(err_code);
-
-  gpioOutputEnable(GPIO_1_PIN);
-  gpioWrite(GPIO_1_PIN, 0);
-  gpioOutputEnable(GPIO_3_PIN);
-  gpioWrite(GPIO_3_PIN, 0);
-  gpioOutputEnable(BLE_LED_PIN);
-  gpioWrite(BLE_LED_PIN, 0);
+  nrf_gpio_cfg(
+      CAM_SPI_CS,
+      NRF_GPIO_PIN_DIR_OUTPUT,
+      NRF_GPIO_PIN_INPUT_DISCONNECT,
+      NRF_GPIO_PIN_PULLUP,
+      NRF_GPIO_PIN_S0S1,
+      NRF_GPIO_PIN_NOSENSE);
 }
 
 void gpioOutputEnable(gpioPin_t pin)

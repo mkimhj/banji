@@ -2,7 +2,6 @@
 #include "nrf_gpio.h"
 #include "nrf_drv_gpiote.h"
 
-
 // SPI (IMU)
 #define SPI_SCK_PIN                       NRF_GPIO_PIN_MAP(0,5)
 #define SPI_MOSI_PIN                      NRF_GPIO_PIN_MAP(0,17)
@@ -14,11 +13,11 @@
 #define ACCEL_INT2_PIN                    NRF_GPIO_PIN_MAP(0, 31)
 
 // LED
-#define NRF_LED1_PIN                      NRF_GPIO_PIN_MAP(0,7)                 // not functional on revA design
-#define NRF_LED2_PIN                      NRF_GPIO_PIN_MAP(0,4)                 // 0 to turn on, 1 to turn off
+#define LED1_PIN                          NRF_GPIO_PIN_MAP(0,7)                 // not functional on revA design
+#define LED2_PIN                          NRF_GPIO_PIN_MAP(0,4)                 // 0 to turn on, 1 to turn off
 
 // Button
-#define NRF_BUTTON_PIN                    NRF_GPIO_PIN_MAP(0, 15)               
+#define BUTTON_PIN                        NRF_GPIO_PIN_MAP(0, 15)
 
 // DEBUG_UART
 #define UART_TX_PIN                       NRF_GPIO_PIN_MAP(0, 6)
@@ -30,25 +29,23 @@
 
 // CAMERA (TODO: Revisit these, getting it to compile for now)
 #define CAM_POWER                        NRF_GPIO_PIN_MAP(0, 18)
-#define CAM_SPI_CS                       NRF_GPIO_PIN_MAP(0, 29)
-#define CAM_SCLK                         NRF_GPIO_PIN_MAP(0, 19)
-#define CAM_MOSI                         NRF_GPIO_PIN_MAP(0, 20)
-#define CAM_MISO                         NRF_GPIO_PIN_MAP(0, 30) // dead pin, just need to provide SDK a value
+#define CAM_SPI_CS                       NRF_GPIO_PIN_MAP(0, 29) // CAM_FVLD
+#define CAM_PCLK_OUT                     NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK
+#define CAM_D0                           NRF_GPIO_PIN_MAP(0, 20) // CAM_D0
+#define CAM_FRAME_VALID                  NRF_GPIO_PIN_MAP(0, 29)
+#define CAM_LINE_VALID                   NRF_GPIO_PIN_MAP(0, 11)
+#define CAM_INT                          NRF_GPIO_PIN_MAP(0, 9)
+#define CAM_MCLK_IN                      NRF_GPIO_PIN_MAP(1, 8)
+#define CAM_MISO                         NRF_GPIO_PIN_MAP(0, 30) // not used, just need to provide SDK a value
 
 // QSPI
 // These are located in sdk_config.h. They're placed here just for reference.
-#define NRFX_QSPI_PIN_SCK                NRF_GPIO_PIN_MAP(0, 19) // Camera PCLK
-#define NRFX_QSPI_PIN_CSN                NRF_GPIO_PIN_MAP(0, 29) // Frame Valid (FVLD)
-#define NRFX_QSPI_PIN_IO0                NRF_GPIO_PIN_MAP(0, 20) // D0 
-#define NRFX_QSPI_PIN_IO1                NRF_GPIO_PIN_MAP(0, 21) // D1
-#define NRFX_QSPI_PIN_IO2                NRF_GPIO_PIN_MAP(0, 22) // D2
-#define NRFX_QSPI_PIN_IO3                NRF_GPIO_PIN_MAP(0, 23) // D3
-
-// Camera 
-#define NRF_DVP_INT                      NRF_GPIO_PIN_MAP(0, 9) // INT 
-#define NRF_DVP_LVLD                     NRF_GPIO_PIN_MAP(0, 11) // Line Valid (LVLD)
-#define NRF_DVP_TRIG                     NRF_GPIO_PIN_MAP(0, 25) // Trigger (TRIG)
-#define NRF_DVP_MCLK                     NRF_GPIO_PIN_MAP(1, 8) // Master Clock (MCLK)
+// #define QSPI_PIN_SCK                     NRF_GPIO_PIN_MAP(0, 19) // Camera PCLK
+// #define QSPI_PIN_CSN                     NRF_GPIO_PIN_MAP(0, 29) // Frame Valid (FVLD)
+// #define QSPI_PIN_IO0                     NRF_GPIO_PIN_MAP(0, 20) // D0
+// #define QSPI_PIN_IO1                     NRF_GPIO_PIN_MAP(0, 21) // D1
+// #define QSPI_PIN_IO2                     NRF_GPIO_PIN_MAP(0, 22) // D2
+// #define QSPI_PIN_IO3                     NRF_GPIO_PIN_MAP(0, 23) // D3
 
 // Wrapper
 #define GPIO_INTERRUPT_CONFIG_RISING  GPIOTE_CONFIG_IN_SENSE_LOTOHI(true)

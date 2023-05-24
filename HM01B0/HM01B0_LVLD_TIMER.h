@@ -17,11 +17,8 @@
 #include "HM01B0_GPIO.h"
 #include "HM01B0_CAPTURE.h"
 
-const nrf_drv_timer_t TIMER_LVLD = NRF_DRV_TIMER_INSTANCE(4);
-
-void timer_lvld_event_handler(nrf_timer_event_t event_type, void* p_context);
-
+void lvld_timer_enable(void);
+void lvld_timer_disable(void);
 void lvld_timer_init(void);
-
 
 #endif /* HM01B0_LVLD_TIMER_H_ */

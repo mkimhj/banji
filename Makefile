@@ -195,6 +195,7 @@ INC_FOLDERS += \
   $(SDK_ROOT)/components/libraries/util \
   $(PROJ_DIR)/config \
 	$(PROJ_DIR)/HM01B0 \
+	$(PROJ_DIR)/ \
   $(SDK_ROOT)/components/libraries/balloc \
   $(SDK_ROOT)/components/libraries/ecc \
   $(SDK_ROOT)/components/libraries/hardfault \

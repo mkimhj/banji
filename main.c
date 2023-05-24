@@ -44,45 +44,21 @@
 #include "spi.h"
 #include "i2c.h"
 #include "flash.h"
+#include "cli.h"
 #include "main.h"
 
 #include "boards.h"
 #include "nrf_ppi.h"
 #include "nrf_timer.h"
-#include "nrf_cli.h"
-#include "nrf_cli_types.h"
-#include "nrf_cli_libuarte.h"
-
-#define CLI_EXAMPLE_LOG_QUEUE_SIZE (6)
-
-NRF_CLI_LIBUARTE_DEF(m_cli_libuarte_transport, 512, 512);
-NRF_CLI_DEF(m_cli_libuarte,
-            "banji] ",
-            &m_cli_libuarte_transport.transport,
-            '\r',
-            CLI_EXAMPLE_LOG_QUEUE_SIZE);
 
 APP_TIMER_DEF(resetTimer);
 
-static int16_t micData[PDM_DECIMATION_BUFFER_LENGTH];
 static bool bleRetry = false;
 static bool bleMicStreamRequested = false;
 static uint32_t expectedBufferCount = 0;
 
 static uint8_t metadataIndex = 0;
 static uint8_t metadata[180] = { 0 };
-
-accelGenericInterrupt_t accelInterrupt1 = {
-  .pin = ACCEL_INT1,
-  .source = ACCEL_INT_SOURCE_GENERIC1,
-  .xEnable = false,
-  .yEnable = false,
-  .zEnable = true,
-  .activity = true,
-  .combSelectIsAnd = false,
-  .threshold = 0x3,
-  .duration = 0x7,
-};
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
@@ -104,8 +80,6 @@ void powerEnterSleepMode(void)
   APP_ERROR_CHECK(err_code);
 
   // Drive enable signals low before shutting down
-  gpioOutputEnable(ACCEL_EN_PIN);
-  gpioWrite(ACCEL_EN_PIN, 0);
 
   spiDeInit();
   delayMs(1);
@@ -180,34 +154,6 @@ static void idle(void)
   }
 }
 
-static void cli_start(void)
-{
-  ret_code_t ret;
-
-  ret = nrf_cli_start(&m_cli_libuarte);
-  APP_ERROR_CHECK(ret);
-}
-
-static void cli_init(void)
-{
-  ret_code_t ret;
-
-  cli_libuarte_config_t libuarte_config;
-  libuarte_config.tx_pin = UART_TX_PIN;
-  libuarte_config.rx_pin = UART_RX_PIN;
-  libuarte_config.baudrate = NRF_UARTE_BAUDRATE_115200;
-  libuarte_config.parity = NRF_UARTE_PARITY_EXCLUDED;
-  libuarte_config.hwfc = NRF_UARTE_HWFC_DISABLED;
-  ret = nrf_cli_init(&m_cli_libuarte, &libuarte_config, true, true, NRF_LOG_SEVERITY_INFO);
-
-  APP_ERROR_CHECK(ret);
-}
-
-static void cli_process(void)
-{
-  nrf_cli_process(&m_cli_libuarte);
-}
-
 static void banjiInit(void)
 {
   logInit();
@@ -218,8 +164,7 @@ static void banjiInit(void)
   err_code = app_timer_create(&resetTimer, APP_TIMER_MODE_SINGLE_SHOT, resetTimerCallback);
   APP_ERROR_CHECK(err_code);
 
-  cli_init();
-  cli_start();
+  cliInit();
 
   NRF_LOG_RAW_INFO("Press the Tab key to see all available commands.\n");
 
@@ -228,10 +173,9 @@ static void banjiInit(void)
   eventQueueInit();
   buttons_leds_init();
 
-  i2c_init();
+  i2cInit();
   spiInit();
   // accelInit();
-  // accelGenericInterruptEnable(&accelInterrupt1);
 
   powerInit();
 
@@ -268,7 +212,6 @@ static void processQueue(void)
         bleSendData(metadata, 180);
 
         bleMicStreamRequested = true;
-        gpioWrite(GPIO_1_PIN, 1);
         break;
 
       case EVENT_BLE_DATA_STREAM_STOP:
@@ -323,40 +266,8 @@ int main(void)
 
   for (;;)
   {
-    cli_process();
     idle();
     processQueue();
+    cliProcess();
   }
 }
-
-static void cmd_i2c_scan(nrf_cli_t const *p_cli, size_t argc, char **argv)
-{
-  i2c_scan();
-}
-
-static void cmd_i2c(nrf_cli_t const *p_cli, size_t argc, char **argv)
-{
-  ASSERT(p_cli);
-  ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
-
-  if ((argc == 1) || nrf_cli_help_requested(p_cli))
-  {
-    nrf_cli_help_print(p_cli, NULL, 0);
-    return;
-  }
-
-  if (argc != 2)
-  {
-    nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: bad parameter count\n", argv[0]);
-    return;
-  }
-
-  nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
-}
-
-NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_i2c)
-{
-    NRF_CLI_CMD(scan, NULL, "Print all entered parameters.", cmd_i2c_scan),
-    NRF_CLI_SUBCMD_SET_END
-};
-NRF_CLI_CMD_REGISTER(i2c, &m_sub_i2c, "i2c", cmd_i2c);
