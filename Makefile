@@ -89,6 +89,7 @@ SRC_FILES += \
 	$(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
 	$(PROJ_DIR)/$(wildcard *.c) \
 	$(PROJ_DIR)/$(wildcard HM01B0/*.c) \
+	$(PROJ_DIR)/$(wildcard BMI270-Sensor-API-master/*.c) \
 	$(SDK_ROOT)/external/segger_rtt/SEGGER_RTT.c \
 	$(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_Syscalls_GCC.c \
 	$(SDK_ROOT)/external/segger_rtt/SEGGER_RTT_printf.c \
@@ -194,6 +195,7 @@ INC_FOLDERS += \
 	$(SDK_ROOT)/components/libraries/util \
 	$(PROJ_DIR)/config \
 	$(PROJ_DIR)/HM01B0 \
+	$(PROJ_DIR)/BMI270-Sensor-API-master \
 	$(PROJ_DIR)/ \
 	$(PROJ_DIR)/sdk_patch \
 	$(SDK_ROOT)/components/libraries/balloc \
