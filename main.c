@@ -80,6 +80,10 @@ void powerEnterSleepMode(void)
   APP_ERROR_CHECK(err_code);
 
   // Drive enable signals low before shutting down
+  //gpioOutputEnable(MIC_EN_PIN);
+  //gpioWrite(MIC_EN_PIN, 0);
+  //gpioOutputEnable(ACCEL_EN_PIN);
+  //gpioWrite(ACCEL_EN_PIN, 0);
 
   spiDeInit();
   delayMs(1);

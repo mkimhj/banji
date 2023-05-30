@@ -79,6 +79,54 @@ NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_cam){
     NRF_CLI_SUBCMD_SET_END};
 NRF_CLI_CMD_REGISTER(cam, &m_sub_cam, "camera", cmd_cam);
 
+// SPI commands
+
+static void cmd_spi_transfer(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+
+  // just testing SPI and IMU works
+
+  // from accelInit(); do this to enable SPI mode on IMU
+  //gpioOutputEnable(ACCEL_EN_PIN);
+  //gpioWrite(ACCEL_EN_PIN, 1);
+  //delayMs(1);
+
+  // from accelRead()
+  uint8_t bytes[3] = {0x80 | 0x00, 0x00, 0x00};
+  spiTransfer(SPI_BUS, bytes, 3);
+
+  // log the data returned
+  NRF_LOG_RAW_INFO("%08d [spi IMU] data: %x %x %x\n", systemTimeGetMs(), bytes[0],bytes[1],bytes[2]);
+
+}
+
+static void cmd_spi(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  ASSERT(p_cli);
+  ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
+
+  if ((argc == 1) || nrf_cli_help_requested(p_cli))
+  {
+    nrf_cli_help_print(p_cli, NULL, 0);
+    return;
+  }
+
+  if (argc != 2)
+  {
+    nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: bad parameter count\n", argv[0]);
+    return;
+  }
+
+  nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
+}
+
+NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_spi)
+{
+    NRF_CLI_CMD(transfer, NULL, "spiBus, data, length", cmd_spi_transfer),
+    NRF_CLI_SUBCMD_SET_END
+};
+
+NRF_CLI_CMD_REGISTER(spi, &m_sub_spi, "spi", cmd_spi);
 ////////////////////////////////////////////////////////////////////////////////
 
 void cliInit(void)
