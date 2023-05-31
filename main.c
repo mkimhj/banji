@@ -41,6 +41,7 @@
 #include "event.h"
 #include "gpio.h"
 #include "accel.h"
+#include "imu.h"
 #include "spi.h"
 #include "i2c.h"
 #include "flash.h"
@@ -183,6 +184,7 @@ static void banjiInit(void)
 
   powerInit();
 
+  imuInit();
   bleInit();
   bleAdvertisingStart();
 
