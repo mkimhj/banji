@@ -100,6 +100,7 @@ uint8_t imuRead(uint8_t reg);
 void imuWrite(uint8_t reg, uint8_t data);
 static void uploadConfigFile(void);
 static uint8_t checkInitStatus(void);
+void imuSoftReset(void);
 uint16_t imuGetX(void);
 uint16_t imuGetY(void);
 uint16_t imuGetZ(void);

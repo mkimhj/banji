@@ -494,6 +494,12 @@ static uint8_t checkInitStatus(void){
 
 }
 
+void imuSoftReset(void){
+
+    imuWrite(0x7E, 0xB6);
+
+}
+
 /**
  * 
  * @brief Initialize the IMU to operate in SPI mode
