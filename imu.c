@@ -4,8 +4,6 @@
 
 #include "gpio.h"
 #include "spi.h"
-#include "accel.h"
-#include "accel_p.h"
 #include "event.h"
 #include "timers.h"
 #include "imu.h"
