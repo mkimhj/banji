@@ -4,10 +4,14 @@
  *  Created on: Nov 25, 2018
  *      Author: Ali Najafi
  */
+#include <nrfx.h>
+#include "nordic_common.h"
+#include "nrf.h"
 
 #include "HM01B0_CLK.h"
 #include "HM01B0_CAPTURE.h"
 #include "gpio.h"
+#include "nrf_drv_ppi.h"
 
 uint32_t *timer0_prescaler_address = (uint32_t *)0x40009510; // address for timer1 prescaler
 uint32_t timer0_prescaler0 = 0x00000000;

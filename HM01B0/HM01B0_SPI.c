@@ -25,7 +25,7 @@ nrfx_spis_config_t spiSlaveConfig = {
   .miso_pin = CAM_MISO,
   .mosi_pin = CAM_D0,
   .sck_pin = CAM_PCLK_OUT,
-  .csn_pin = CAM_SPI_CS,
+  .csn_pin = CAM_SPI_CS_IN,
   .mode = NRF_SPIS_MODE_0,
   .bit_order = NRF_SPIS_BIT_ORDER_MSB_FIRST,
   .csn_pullup = NRFX_SPIS_DEFAULT_CSN_PULLUP,
@@ -38,6 +38,11 @@ nrfx_spis_config_t spiSlaveConfig = {
 void spiSlaveSetRxDone(uint16_t value)
 {
   m_length_rx_done = value;
+}
+
+bool spiSlaveGetRxDone(void)
+{
+  return m_length_rx_done;
 }
 
 uint16_t spiSlaveGetRxLength(void)

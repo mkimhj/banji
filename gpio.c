@@ -22,8 +22,10 @@ void gpioInit(void)
   // gpioOutputEnable(BLE_LED_PIN);
   // gpioWrite(BLE_LED_PIN, 0);
 
+  // TODO: Move this somewhere better
+  // This pin is responsible for listening to Frame Valid and then driving a GPIO to CAM_SPI_CS_IN
   nrf_gpio_cfg(
-      CAM_SPI_CS,
+      CAM_SPI_CS_OUT,
       NRF_GPIO_PIN_DIR_OUTPUT,
       NRF_GPIO_PIN_INPUT_DISCONNECT,
       NRF_GPIO_PIN_PULLUP,

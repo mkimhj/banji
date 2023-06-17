@@ -18,29 +18,21 @@
 #include "gpio.h"
 
 extern uint32_t line_count;
-extern uint8_t image_rd_done;
-
 extern uint32_t ble_bytes_sent_counter;
-
-void cameraPowerEnable(void);
 
 void hm01b0_init(void);
 
 void hm_peripheral_uninit(void);
-
 void hm_peripheral_init(void);
 void hm_peripheral_connected_init(void);
 
 void hm_single_capture(void);
-
-
 void hm_single_capture_spi(void);
-
 void hm_single_capture_spi_832(void);
-
 void hm_single_capture_spi_832_stream(void);
 
-void hm_single_capture_spi_832_compressed(void);
-
+bool hm_get_capture_done(void);
+void hm_reset_capture_done(void);
+void hm_set_capture_done(void);
 
 #endif /* HM01B0_CAPTURE_H_ */

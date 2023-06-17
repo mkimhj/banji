@@ -1,5 +1,6 @@
 #include "i2c.h"
 #include "gpio.h"
+#include "camera.h"
 
 #include "nrf_cli.h"
 #include "nrf_cli_types.h"
@@ -14,7 +15,9 @@ NRF_CLI_DEF(m_cli_libuarte,
             '\r',
             CLI_EXAMPLE_LOG_QUEUE_SIZE);
 
-static void cmd_i2cScan(nrf_cli_t const *p_cli, size_t argc, char **argv)
+
+// I2C COMMANDS
+static void cmd_i2c_scan(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   i2cScan();
 }
@@ -39,10 +42,42 @@ static void cmd_i2c(nrf_cli_t const *p_cli, size_t argc, char **argv)
   nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
 }
 
+static void cmd_cam_capture(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  cameraInit();
+  // cameraCaptureFrame();
+}
+
+// CAMERA COMMANDS
+static void cmd_cam(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  ASSERT(p_cli);
+  ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
+
+  if ((argc == 1) || nrf_cli_help_requested(p_cli))
+  {
+    nrf_cli_help_print(p_cli, NULL, 0);
+    return;
+  }
+
+  if (argc != 2)
+  {
+    nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: bad parameter count\n", argv[0]);
+    return;
+  }
+
+  nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
+}
+
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_i2c){
-    NRF_CLI_CMD(scan, NULL, "Print all entered parameters.", cmd_i2cScan),
+    NRF_CLI_CMD(scan, NULL, "Print all entered parameters.", cmd_i2c_scan),
     NRF_CLI_SUBCMD_SET_END};
 NRF_CLI_CMD_REGISTER(i2c, &m_sub_i2c, "i2c", cmd_i2c);
+
+NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_cam){
+    NRF_CLI_CMD(capture, NULL, "Print all entered parameters.", cmd_cam_capture),
+    NRF_CLI_SUBCMD_SET_END};
+NRF_CLI_CMD_REGISTER(cam, &m_sub_cam, "camera", cmd_cam);
 
 ////////////////////////////////////////////////////////////////////////////////
 

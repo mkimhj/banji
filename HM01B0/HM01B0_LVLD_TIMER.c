@@ -6,6 +6,7 @@
  */
 
 #include "HM01B0_LVLD_TIMER.h"
+#include "ble_manager.h"
 
 uint32_t lvld_timer_val = LVLD_TIMER_VALUE;
 
@@ -26,28 +27,31 @@ void lvld_timer_disable(void)
  */
 void timer_lvld_event_handler(nrf_timer_event_t event_type, void* p_context)
 {
-  if (line_count<LINE_NUM) {
-  // here we need to activate SPI CS; enable the lvld_timer; and activate the CAM_LINE_VALID interrupt; increase the counter of lines
+  if (line_count < IMAGE_HEIGHT)
+  {
+    // here we need to activate SPI CS; enable the lvld_timer; and activate the CAM_LINE_VALID interrupt; increase the counter of lines
     lvld_timer_disable();
-    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS;
+    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
     spiSlaveSetBuffersBackWithLineCount(line_count);
     nrf_drv_gpiote_in_event_enable(CAM_LINE_VALID, true);
-  } else {
+  }
+  else
+  {
     nrf_drv_gpiote_in_event_disable(CAM_LINE_VALID);
     nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
     lvld_timer_disable();
-    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS;
+    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
 
     #if (CAM_FRAME_VALID_INT == 1)
       spiSlaveSetRxDone(spiSlaveGetRxLength());
-      ble_bytes_sent_counter = 0;
+      bleSetPixelsSent(0);
 
       #if (defined(CAMERA_DEBUG) && (CAMERA_DEBUG == 1))
           nrf_drv_gpiote_in_event_enable(CAM_FRAME_VALID, true);
           spiSlaveSetBuffers();
       #endif
     #endif
-    image_rd_done = 1;
+    hm_set_capture_done();
   }
 }
 

@@ -4,20 +4,23 @@
  *  Created on: Nov 25, 2018
  *      Author: Ali Najafi
  */
+#include <stdbool.h>
 
 #include "HM01B0_CAPTURE.h"
 #include "gpio.h"
 #include "i2c.h"
 #include "HM01B0_LVLD_TIMER.h"
 #include "nrf_delay.h"
+#include "ble_manager.h"
 
 uint32_t line_count;
-uint8_t image_rd_done = 0;
+bool image_rd_done = 0;
 uint8_t image_frame_done = 0;
 bool m_stream_mode_active;
 uint16_t total_image_size;
 
-void cameraPowerEnable(void){
+void cameraPowerEnable(void)
+{
   nrf_gpio_cfg(
     CAM_POWER,
     NRF_GPIO_PIN_DIR_OUTPUT,
@@ -31,9 +34,24 @@ void cameraPowerEnable(void){
   nrf_delay_ms(POR_DELAY);
 }
 
+bool hm_get_capture_done(void)
+{
+  return image_rd_done;
+}
+
+void hm_reset_capture_done(void)
+{
+  image_rd_done = false;
+}
+
+void hm_set_capture_done(void)
+{
+  image_rd_done = true;
+}
+
 void hm01b0_init(void){
   /*Test if camera is functional*/
-  ble_bytes_sent_counter = 0;
+  bleSetPixelsSent(0);
   i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT,0x00);
   uint8_t version = i2cRead16(CAMERA_I2C_ADDR, REG_MODEL_ID_L);
   if(version != 0xB0){
@@ -43,8 +61,8 @@ void hm01b0_init(void){
   i2cWrite16(CAMERA_I2C_ADDR,  REG_MODE_SELECT, 0x00);//go to stand by mode
 
   /*Initialize and set high the SPI chip select*/
-  nrf_gpio_cfg_output(CAM_SPI_CS);//Set up the chip select for SPI
-  nrf_gpio_pin_set(CAM_SPI_CS);
+  nrf_gpio_cfg_output(CAM_SPI_CS_OUT);//Set up the chip select for SPI
+  nrf_gpio_pin_set(CAM_SPI_CS_OUT);
 
   /*Camera settings initialization*/
   hm01b0_init_fixed_rom_qvga_fixed();
@@ -63,15 +81,11 @@ void hm_peripheral_init(void)
   /*Initialize the GPIO settings: Frame valid for */
   gpio_setting_init();
 
-  /*Initialize the I2C for camera*/
-  nrf_delay_ms(100);
-
   hm01b0_init();
-
   lvld_timer_init();
 
   #if(CAM_CLK_GATING == 1)
-  nrf_drv_timer_disable(&CAM_TIMER);
+    nrf_drv_timer_disable(&CAM_TIMER);
   #endif
 }
 
@@ -89,7 +103,7 @@ void hm_single_capture_spi_832_stream(void){
   spiSlaveSetBuffers();
 
   /*Camera values initialized*/
-  image_rd_done = 0;
+  hm_reset_capture_done();
 
   /*Enable the FRAME VALID interrupt*/
   nrf_drv_gpiote_in_event_enable(CAM_FRAME_VALID, true);
@@ -107,7 +121,7 @@ void hm_single_capture_spi_832(void)
   #endif
   //nrf_delay_ms(100);
   spiSlaveSetRxDone(0);
-  ble_bytes_sent_counter = 0;
+  bleSetPixelsSent(0);
   line_count = 0;
 
   /*SPI registers initilization*/
@@ -115,19 +129,19 @@ void hm_single_capture_spi_832(void)
 
   spiSlaveSetBuffers();
 
-  image_rd_done = 0;
+  hm_reset_capture_done();
   image_frame_done = 0;
-  ble_bytes_sent_counter = 0;
+  bleSetPixelsSent(0);
 
   /*Enable the FRAME VALID interrupt*/
   nrf_drv_gpiote_in_event_enable(CAM_FRAME_VALID, true);
 
   lvld_timer_enable();
-  nrf_gpio_pin_clear(CAM_SPI_CS);
+  nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
 
   i2cWrite16(CAMERA_I2C_ADDR,  REG_MODE_SELECT, capture_mode);//If we use the 0x03 mode for single capture, the power of camera stays high after capturing one frame
 
-  while (image_rd_done != 1) {
+  while (!hm_get_capture_done()) {
     __WFE();
   };
   while (!spiSlaveGetTransferDone()) {
@@ -140,7 +154,7 @@ void hm_single_capture_spi_832(void)
 
 void hm_single_capture(void)
 {
-  ble_bytes_sent_counter = 0;
+  bleSetPixelsSent(0);
 
   hm01b0_init_fixed_rom_qvga_fixed();
 
@@ -151,15 +165,15 @@ void hm_single_capture(void)
 void hm_single_capture_spi(void)
 {
   spiSlaveSetRxDone(0);
-  ble_bytes_sent_counter = 0;
+  bleSetPixelsSent(0);
 
   /*SPI registers initilization*/
   spiSlaveSetTransferDone(false);
   spiSlaveSetBuffers();
 
-  nrf_gpio_pin_clear(CAM_SPI_CS);
+  nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
 
-  ble_bytes_sent_counter = 0;
+  bleSetPixelsSent(0);
 
   /*Enable the FRAME VALID interrupt*/
   nrf_drv_gpiote_in_event_enable(CAM_FRAME_VALID, true);

@@ -104,7 +104,7 @@ static void bsp_event_handler(bsp_event_t event)
       break;
 
     case BSP_EVENT_DISCONNECT:
-      err_code = sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+      err_code = bleDisconnect();
       if (err_code != NRF_ERROR_INVALID_STATE) { APP_ERROR_CHECK(err_code); }
       break;
 
@@ -171,7 +171,7 @@ static void banjiInit(void)
   gpioInit();
 
   eventQueueInit();
-  buttons_leds_init();
+  buttons_leds_init(); // one of these
 
   i2cInit();
   spiInit();

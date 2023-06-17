@@ -6,25 +6,29 @@
  */
 #include "HM01B0_GPIO.h"
 #include "gpio.h"
+#include "ble_manager.h"
 
 void in_pin_handler_CAM_LINE_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
-  if (line_count < LINE_NUM) {
-  // here we need to activate SPI CS; enable the lvld_timer; and activate the CAM_LINE_VALID interrupt; increase the counter of lines
+  if (line_count < IMAGE_HEIGHT)
+  {
+    // here we need to activate SPI CS; enable the lvld_timer; and activate the CAM_LINE_VALID interrupt; increase the counter of lines
     lvld_timer_enable();
-    NRF_GPIO->OUTCLR = 1UL << CAM_SPI_CS;
+    NRF_GPIO->OUTCLR = 1UL << CAM_SPI_CS_OUT;
     line_count++;
-  } else {
+  }
+  else
+  {
     nrf_drv_gpiote_in_event_disable(CAM_LINE_VALID);
     nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
     lvld_timer_disable();
-    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS;
+    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
 
     #if (CAM_FRAME_VALID_INT == 1)
       spiSlaveSetRxDone(spiSlaveGetRxLength());
-      ble_bytes_sent_counter = 0;
+      bleSetPixelsSent(0);
     #endif
-    image_rd_done = 1;
+    hm_set_capture_done();
   }
 }
 
@@ -34,7 +38,7 @@ void in_pin_handler_CAM_FRAME_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarit
   line_count = 0;
   spiSlaveSetRxDone(0);
   lvld_timer_enable();
-  nrf_gpio_pin_clear(CAM_SPI_CS);
+  nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
 }
 
 void gpio_setting_uninit(void)

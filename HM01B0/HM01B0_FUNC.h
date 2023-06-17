@@ -11,7 +11,7 @@
 #include <stdbool.h>
 
 #include "i2c.h"
-#include "HM01B0Regs.h"
+#include "HM01B0_REGISTER_MAP.h"
 
 //FUNCTIONS----------------------------------------------------------------------------------------------------------------------------//
 void hm01b0_init_fixed_rom_qvga_fixed(void);

@@ -29,6 +29,7 @@
 
 // void spis_pin_set(void);
 
+bool spiSlaveGetRxDone(void);
 void spiSlaveSetRxDone(uint16_t value);
 uint16_t spiSlaveGetRxLength(void);
 void spiSlaveSetTransferDone(bool done);
