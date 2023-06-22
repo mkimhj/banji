@@ -115,8 +115,8 @@ uint16_t accelGetZ(void)
 
 void accelInit(void)
 {
-  gpioOutputEnable(ACCEL_EN_PIN);
-  gpioWrite(ACCEL_EN_PIN, 1);
+  // gpioOutputEnable(ACCEL_EN_PIN);
+  // gpioWrite(ACCEL_EN_PIN, 1);
   delayMs(1);
 
   uint8_t version = accelRead(CHIP_ID_REG);

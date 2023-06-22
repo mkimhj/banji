@@ -43,9 +43,15 @@
 #include "ble_cus.h"
 BLE_CUS_DEF(m_cus);
 
+NRF_BLE_GATT_DEF(m_gatt);           /**< GATT module instance. */
+NRF_BLE_QWR_DEF(m_qwr);             /**< Context for the Queued Write module.*/
+BLE_ADVERTISING_DEF(m_advertising); /**< Advertising module instance. */
+
 #define OPCODE_LENGTH 1
 #define HANDLE_LENGTH 2
 
+static uint32_t pixelsSent = 0; // equivalent to ble_bytes_sent_counter in prev codebase
+static uint16_t m_conn_handle = BLE_CONN_HANDLE_INVALID; /**< Handle of the current connection. */
 static uint8_t* transmitData;
 static uint16_t transmitOffset;
 static uint32_t transmitLength;
@@ -569,4 +575,19 @@ void blePushSequenceNumber(void)
 {
   // (sizeof(int16_t) * PDM_DECIMATION_BUFFER_LENGTH)/maxAttMtuBytes
   sequenceNumber += 3;
+}
+
+void bleSetPixelsSent(uint32_t value)
+{
+  pixelsSent = value;
+}
+
+uint32_t bleGetPixelsSent(void)
+{
+  return pixelsSent;
+}
+
+ret_code_t bleDisconnect(void)
+{
+  return sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
 }
