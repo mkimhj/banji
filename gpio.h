@@ -31,13 +31,16 @@
 #define CAM_POWER                        NRF_GPIO_PIN_MAP(0, 18)
 #define CAM_SPI_CS_OUT                   NRF_GPIO_PIN_MAP(0, 12) // Goes to CAM_SPI_CS_IN
 #define CAM_SPI_CS_IN                    NRF_GPIO_PIN_MAP(0, 14) // Listens on CAM_SPI_CS_IN
-#define CAM_PCLK_OUT                     NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK
+#define CAM_PCLK_OUT_TO_MCU              NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK (SPI CLK)
 #define CAM_D0                           NRF_GPIO_PIN_MAP(0, 20) // CAM_D0
 #define CAM_FRAME_VALID                  NRF_GPIO_PIN_MAP(0, 29) // Input
 #define CAM_LINE_VALID                   NRF_GPIO_PIN_MAP(0, 11) // Input
 #define CAM_INT                          NRF_GPIO_PIN_MAP(0, 9)  // Input
-#define CAM_MCLK_IN                      NRF_GPIO_PIN_MAP(1, 8)
+#define CAM_MCLK_IN_FROM_MCU             NRF_GPIO_PIN_MAP(1, 8)
 #define CAM_MISO                         NRF_GPIO_PIN_MAP(0, 30) // not used, just need to provide SDK a value
+
+#define TRACE_PIN_1                      NRF_GPIO_PIN_MAP(1, 14)
+#define TRACE_PIN_2                      NRF_GPIO_PIN_MAP(1, 15)
 
 // QSPI
 // These are located in sdk_config.h. They're placed here just for reference.

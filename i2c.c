@@ -91,7 +91,7 @@ void i2cInit(void)
   const nrf_drv_twi_config_t i2c_config = {
       .scl = I2C_SCL_PIN,
       .sda = I2C_SDA_PIN,
-      .frequency = NRF_DRV_TWI_FREQ_400K,
+      .frequency = NRF_DRV_TWI_FREQ_250K,
       .interrupt_priority = APP_IRQ_PRIORITY_HIGH,
       .clear_bus_init = false
   };
@@ -181,7 +181,7 @@ void i2cWrite16(uint8_t addr, uint16_t reg, uint8_t data)
   waitForTransfer();
 
   if (verifyWrite16(addr, reg, data) == false) {
-    NRF_LOG_INFO("[i2c] failed to write");
+    NRF_LOG_INFO("[i2c] failed to write addr:0x%x reg:0x%04x data:0x%04x", addr, reg, data);
   }
 }
 

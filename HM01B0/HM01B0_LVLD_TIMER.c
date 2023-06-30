@@ -7,6 +7,7 @@
 
 #include "HM01B0_LVLD_TIMER.h"
 #include "ble_manager.h"
+#include "gpio.h"
 
 uint32_t lvld_timer_val = LVLD_TIMER_VALUE;
 
@@ -29,7 +30,6 @@ void timer_lvld_event_handler(nrf_timer_event_t event_type, void* p_context)
 {
   if (line_count < IMAGE_HEIGHT)
   {
-    // here we need to activate SPI CS; enable the lvld_timer; and activate the CAM_LINE_VALID interrupt; increase the counter of lines
     lvld_timer_disable();
     NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
     spiSlaveSetBuffersBackWithLineCount(line_count);

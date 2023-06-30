@@ -6722,7 +6722,7 @@
 // <16384=> 16384
 
 #ifndef NRF_LOG_BUFSIZE
-#define NRF_LOG_BUFSIZE 2*1024
+#define NRF_LOG_BUFSIZE 4*1024
 #endif
 
 // <q> NRF_LOG_CLI_CMDS  - Enable CLI commands for the module.
@@ -7124,7 +7124,7 @@
 // <e> GPIOTE_CONFIG_LOG_ENABLED - Enables logging in the module.
 //==========================================================
 #ifndef GPIOTE_CONFIG_LOG_ENABLED
-#define GPIOTE_CONFIG_LOG_ENABLED 1
+#define GPIOTE_CONFIG_LOG_ENABLED 0
 #endif
 // <o> GPIOTE_CONFIG_LOG_LEVEL  - Default Severity level
 

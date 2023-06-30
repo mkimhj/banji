@@ -31,7 +31,8 @@ extern uint16_t total_image_size;
 #define IMAGE_HEIGHT 100
 
 //Got from HM01B0_LVLD_TIMER.h +++++++++++++++++++++++++++++++++++++++++
-#define LVLD_TIMER_VALUE (spi_buffer_size + 20)*8*2 //the second number in multiplication is equal to 64/cam_mclk_freq; if cam_mcl_freq=8MHz => 8
+#define CAM_MCLK_FREQ_MHZ 8
+#define LVLD_TIMER_VALUE (spi_buffer_size + 20) * (64 / CAM_MCLK_FREQ_MHZ) * 2 // the second number in multiplication is equal to 64/cam_mclk_freq; if cam_mcl_freq=8MHz => 8
 
 //IRQ priorities +++++++++++++++++++++++++++++++++++++++++
 /*Timer 0 => BLE timing

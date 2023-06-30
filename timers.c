@@ -68,6 +68,7 @@ void delayMs(uint32_t delay)
   uint64_t now = systemTimeGetUs();
   while (systemTimeGetUs() < (now +(delay * 1000))) {
     __WFE();
+    NRF_LOG_PROCESS();
   }
 }
 
