@@ -10,7 +10,7 @@
 
 /*! @name  Global array that stores the configuration file of BMI270 
 */
-static const uint8_t bmi270_config_file[] = {
+static uint8_t bmi270_config_file[] = {
     0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x3d, 0xb1, 0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x91, 0x03, 0x80, 0x2e, 0xbc,
     0xb0, 0x80, 0x2e, 0xa3, 0x03, 0xc8, 0x2e, 0x00, 0x2e, 0x80, 0x2e, 0x00, 0xb0, 0x50, 0x30, 0x21, 0x2e, 0x59, 0xf5,
     0x10, 0x30, 0x21, 0x2e, 0x6a, 0xf5, 0x80, 0x2e, 0x3b, 0x03, 0x00, 0x00, 0x00, 0x00, 0x08, 0x19, 0x01, 0x00, 0x22,
@@ -475,11 +475,57 @@ void imuWrite(uint8_t reg, uint8_t data){
 
 }
 
+void imuBurstWrite(uint8_t reg, uint8_t* data, uint8_t len){
+
+    uint8_t *bytes = (uint8_t*) malloc( (len+2) * sizeof(uint8_t)); // 1 extra bytes for the r/w + register
+    bytes[0] = IMU_WRITE | reg;
+
+    memcpy(bytes + 1, data, len);
+
+    bytes[len + 1] = '\0'; // null byte 
+    
+    // debuging: print bytes array
+    /*
+    for(uint8_t i = 0; i < len + 1; i++){
+        NRF_LOG_RAW_INFO("%x ", bytes[i]);
+    }
+    NRF_LOG_RAW_INFO("\n");
+    */
+
+    spiTransfer(SPI_BUS, bytes, len + 1);
+
+    free(bytes);
+
+}
+
 void uploadConfigFile(void){
 
-    for(uint16_t i = 0; i < CONFIG_SIZE; i++){
-        imuWrite(0x5E, bmi270_config_file[i]);
+    /*
+    5.2.65 Register (0x5B) INIT_ADDR_0
+    DESCRIPTION: Base address of the initialization data. Increment by burst write length in bytes/2 after each burst write operation. Please ignore, if your host supports to load the initialization data in a single 8kB burst write operation. RESET: 0x00
+    */
+    imuWrite(INIT_ADDR_0, 0x00);
+    imuWrite(INIT_ADDR_1, 0x00);
+
+    uint16_t addr = 0x00;
+
+    // burst write the config file
+    uint8_t writeLen = 8; // 8 bytes at a time 
+
+    for(uint16_t i = 0; i < CONFIG_SIZE; i+=writeLen){
+
+        //NRF_LOG_RAW_INFO("i =  %d\n",i);
+        //NRF_LOG_FLUSH();
+
+        imuBurstWrite(0x5C, bmi270_config_file + i, writeLen);
+
+        // increment INIT_ADDR_0 and INIT_ADDR_1
+        addr += (writeLen/2);
+        imuWrite(INIT_ADDR_0, addr);
+        imuWrite(INIT_ADDR_1, addr);
+        //NRF_LOG_RAW_INFO("addr =  %d\n", addr);
     }
+
 }
 
 static uint8_t checkInitStatus(void){
@@ -494,10 +540,26 @@ static uint8_t checkInitStatus(void){
 
 }
 
-void imuSoftReset(void){
+void imuSoftReset(void)
+{
 
-    imuWrite(0x7E, 0xB6);
+    imuWrite(CMD_REG, 0xB6);
 
+}
+
+void imuSetNormalPower(void)
+{
+    imuWrite(PWR_CTRL, 0x0E);    
+    imuWrite(ACC_CONF, 0xA8);
+    imuWrite(GYR_CONF, 0xA9);
+    imuWrite(PWR_CONF, 0x02);
+}
+
+void imuSetLowPower(void)
+{
+    imuWrite(PWR_CTRL, 0x04);    
+    imuWrite(ACC_CONF, 0x17);
+    imuWrite(PWR_CONF, 0x03);
 }
 
 /**
@@ -511,12 +573,28 @@ void imuSoftReset(void){
  */
 void imuInit(void)
 {
+    
+    imuSoftReset();
 
     // select SPI interface via dummy read on power up
-    imuRead(0x00);
+    uint16_t retCnt = 0;
+    volatile uint8_t dummy = imuRead(0x00);
+    while(dummy != 0x24){
+        dummy = imuRead(0x00);
+        if(retCnt++ > 2000){
+            NRF_LOG_RAW_INFO("%08d [imu initialized] error: spi interface not selected\n", systemTimeGetMs());
+            return;
+        }
+        //delayMs(10);
+    }
 
-    /* 
-    //Loading Config File 
+    // reset the IMU
+    //imuSoftReset();
+
+    // set Normal Power (enables sensors)
+    imuSetNormalPower();
+    
+    // Initialization Sequence
 
     // 1.disable advanced power save mode
     imuWrite(0x7C, 0x00);
@@ -534,10 +612,7 @@ void imuInit(void)
     imuWrite(0x59, 0x01);
 
     // 6. check init status
-    uint8_t status = checkInitStatus();
+    NRF_LOG_RAW_INFO("%08d [imu initialized] init status: %d\n", systemTimeGetMs(), checkInitStatus());
 
-    NRF_LOG_RAW_INFO("%08d [imu initialized] init status: %d\n", systemTimeGetMs(), status);
-
-    */
 
 }

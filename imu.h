@@ -18,17 +18,17 @@
 #define IMU_H 
 
 #define SCALE 1//0.244140625 
-#define CMD 0x7E
+#define CMD_REG 0x7E
 #define accel_gyr_addr 0x0C
 
-#define CHIPID 0x00
-#define PWR_CONF 0x7C
 #define PWR_CTRL 0x7D
+#define PWR_CONF 0x7C
 #define ACC_CONF 0x40
 #define GYR_CONF 0x42
 
 #define INIT_CTRL 0x59
 #define INIT_ADDR_0 0x5B
+#define INIT_ADDR_1 0x5C
 #define INIT_DATA 0x5E
 #define INT_STATUS 0x21
 
@@ -98,9 +98,12 @@ typedef struct {
 void imuInit(void);
 uint8_t imuRead(uint8_t reg);
 void imuWrite(uint8_t reg, uint8_t data);
+void imuBurstWrite(uint8_t reg, uint8_t* data, uint8_t len);
 static void uploadConfigFile(void);
 static uint8_t checkInitStatus(void);
 void imuSoftReset(void);
+void imuSetNormalPower(void);
+void imuSetLowPower(void);
 uint16_t imuGetX(void);
 uint16_t imuGetY(void);
 uint16_t imuGetZ(void);

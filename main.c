@@ -155,7 +155,7 @@ static void powerInit(void)
 static void idle(void)
 {
   if (NRF_LOG_PROCESS() == false && eventQueueEmpty()) {
-    nrf_pwr_mgmt_run();
+    //nrf_pwr_mgmt_run();
   }
 }
 
