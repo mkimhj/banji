@@ -49,7 +49,7 @@
 #error "No enabled SPIS instances. Check <nrfx_config.h>."
 #endif
 
-#include <nrfx_spis.h>
+#include "nrfx_spis_patch.h"
 #include <nrfx_prs.h>
 
 #define NRFX_LOG_MODULE SPIS

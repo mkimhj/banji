@@ -37,7 +37,6 @@
 #define CAM_LINE_VALID                   NRF_GPIO_PIN_MAP(0, 11) // Input
 #define CAM_INT                          NRF_GPIO_PIN_MAP(0, 9)  // Input
 #define CAM_MCLK_IN_FROM_MCU             NRF_GPIO_PIN_MAP(1, 8)
-#define CAM_MISO                         NRF_GPIO_PIN_MAP(0, 30) // not used, just need to provide SDK a value
 
 #define TRACE_PIN_1                      NRF_GPIO_PIN_MAP(1, 14)
 #define TRACE_PIN_2                      NRF_GPIO_PIN_MAP(1, 15)

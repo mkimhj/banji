@@ -11,7 +11,7 @@
 #include "gpio.h"
 #include "HM01B0_BLE_DEFINES.h"
 
-#include <nrfx_spis.h>
+#include "nrfx_spis_patch.h"
 
 nrfx_spis_t spiSlaveInstance = NRF_DRV_SPIS_INSTANCE(SPI_SLAVE_BUS); /**< SPIS instance. */
 static bool transferDone = false;
@@ -23,7 +23,7 @@ static uint16_t m_length_rx_done;                         /**< Transfer length. 
 static uint8_t m_length_tx = 0;                           /**< Transfer length. */
 
 nrfx_spis_config_t spiSlaveConfig = {
-  .miso_pin = CAM_MISO,
+  .miso_pin = NRFX_SPIS_PIN_NOT_USED,
   .mosi_pin = CAM_D0,
   .sck_pin = CAM_PCLK_OUT_TO_MCU,
   .csn_pin = CAM_SPI_CS_IN,
@@ -65,7 +65,7 @@ void spiSlaveEventHandler(nrfx_spis_evt_t const* p_event, void* p_context)
 {
   if (p_event->evt_type == NRFX_SPIS_XFER_DONE)
   {
-    NRF_LOG_RAW_INFO("[spis] done\n");
+    NRF_LOG_INFO(" Transfer completed. Received: %08x",(uint32_t)m_rx_buf);
     transferDone = true;
   }
 }
