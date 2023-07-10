@@ -29,7 +29,7 @@
 
 // void spis_pin_set(void);
 
-bool spiSlaveGetRxDone(void);
+uint16_t spiSlaveGetRxDone(void);
 void spiSlaveSetRxDone(uint16_t value);
 uint16_t spiSlaveGetRxLength(void);
 void spiSlaveSetTransferDone(bool done);
@@ -38,5 +38,6 @@ void spiSlaveInit(void);
 void spiSlaveDeInit(void);
 void spiSlaveSetBuffers(void);
 void spiSlaveSetBuffersBackWithLineCount(uint32_t lineCount);
+uint16_t spiSlaveGetRxBuffer(uint8_t **rxBuffer);
 
 #endif /* HM01B0_SPI_H_ */

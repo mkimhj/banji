@@ -1,10 +1,13 @@
 #include "i2c.h"
 #include "gpio.h"
 #include "camera.h"
-
+#include "HM01B0_SPI.h"
+#include "HM01B0_CLK.h"
 #include "nrf_cli.h"
 #include "nrf_cli_types.h"
 #include "nrf_cli_libuarte.h"
+#include "timers.h"
+#include "spi.h"
 
 #define CLI_EXAMPLE_LOG_QUEUE_SIZE (6)
 
@@ -42,14 +45,81 @@ static void cmd_i2c(nrf_cli_t const *p_cli, size_t argc, char **argv)
   nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
 }
 
+static uint16_t pixel = 0;
+
 static void cmd_cam_capture(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   cameraInit();
-  // cameraCaptureFrame();
+  cameraCaptureFrame();
+  pixel = 0;
+}
+
+static void cmd_cam_print(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  uint8_t* camData;
+  uint16_t camDataLength = 0;
+
+  camDataLength = spiSlaveGetRxBuffer(&camData);
+
+  bool dataExists = false;
+  uint16_t dataExistsAtIndex = 0;
+  for (uint16_t i = 0; i < camDataLength; i++) {
+    if (camData[i] != 0) {
+      dataExists = true;
+    }
+  }
+
+  if (dataExists) {
+    for (int i = pixel; i < pixel + 100; i++) {
+      NRF_LOG_RAW_INFO("%d ", camData[i]);
+    }
+  } else {
+    NRF_LOG_RAW_INFO("No data");
+  }
+
+  pixel += 100;
+
+  NRF_LOG_RAW_INFO("\n");
+}
+
+static void cmd_cam_clk(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  hm_clk_out();
 }
 
 // CAMERA COMMANDS
 static void cmd_cam(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  ASSERT(p_cli);
+  ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
+
+  if ((argc == 1) || nrf_cli_help_requested(p_cli))
+  {
+    nrf_cli_help_print(p_cli, NULL, 0);
+    return;
+  }
+
+  if (argc != 2)
+  {
+    nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: bad parameter count\n", argv[0]);
+    return;
+  }
+
+  nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
+}
+
+static void cmd_spis_receive(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  static bool initialized = false;
+  if (initialized == false) {
+    spiSlaveInit();
+    initialized = true;
+  }
+
+  spiSlaveSetBuffers();
+}
+
+static void cmd_spis(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   ASSERT(p_cli);
   ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
@@ -75,9 +145,16 @@ NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_i2c){
 NRF_CLI_CMD_REGISTER(i2c, &m_sub_i2c, "i2c", cmd_i2c);
 
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_cam){
+    NRF_CLI_CMD(clk, NULL, "Print all entered parameters.", cmd_cam_clk),
     NRF_CLI_CMD(capture, NULL, "Print all entered parameters.", cmd_cam_capture),
+    NRF_CLI_CMD(print, NULL, "Print all entered parameters.", cmd_cam_print),
     NRF_CLI_SUBCMD_SET_END};
 NRF_CLI_CMD_REGISTER(cam, &m_sub_cam, "camera", cmd_cam);
+
+NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_spis){
+    NRF_CLI_CMD(receive, NULL, "spiBus, data, length", cmd_spis_receive),
+    NRF_CLI_SUBCMD_SET_END};
+NRF_CLI_CMD_REGISTER(spis, &m_sub_spis, "spis", cmd_spis);
 
 ////////////////////////////////////////////////////////////////////////////////
 

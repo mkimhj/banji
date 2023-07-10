@@ -34,11 +34,11 @@ void in_pin_handler_CAM_LINE_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity
 
 void in_pin_handler_CAM_FRAME_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
+  nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
   nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
   line_count = 0;
   spiSlaveSetRxDone(0);
   lvld_timer_enable();
-  nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
 }
 
 void gpio_setting_uninit(void)

@@ -12,6 +12,7 @@
 #include "HM01B0_LVLD_TIMER.h"
 #include "nrf_delay.h"
 #include "ble_manager.h"
+#include "timers.h"
 
 uint32_t line_count;
 bool image_rd_done = 0;
@@ -46,6 +47,7 @@ void hm_reset_capture_done(void)
 
 void hm_set_capture_done(void)
 {
+  NRF_LOG_INFO("IMAGE READ DONE");
   image_rd_done = true;
 }
 
@@ -55,8 +57,8 @@ void hm01b0_init(void){
   i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT,0x00);
   uint8_t version = i2cRead16(CAMERA_I2C_ADDR, REG_MODEL_ID_L);
   if(version != 0xB0){
-      printf("REG_MODEL_ID_L: %x \n", version);
-      printf("Camera version problem \n");
+    NRF_LOG_INFO("REG_MODEL_ID_L: %x \n", version);
+    NRF_LOG_INFO("Camera version problem \n");
   }
   i2cWrite16(CAMERA_I2C_ADDR,  REG_MODE_SELECT, 0x00);//go to stand by mode
 
@@ -66,6 +68,7 @@ void hm01b0_init(void){
 
   /*Camera settings initialization*/
   hm01b0_init_fixed_rom_qvga_fixed();
+  // hm01b0_init_datasheet_default();
 }
 
 /*Deactivates the peripherals that change the power consumption*/
@@ -76,11 +79,15 @@ void hm_peripheral_uninit(void)
 
 void hm_peripheral_init(void)
 {
-  hm_clk_out();
+  hm_clk_out(); // initializes and starts timer
+
+  gpioOutputEnable(TRACE_PIN_1);
+  gpioWrite(TRACE_PIN_1, 1);
+
+  delayMs(100);
 
   /*Initialize the GPIO settings: Frame valid for */
   gpio_setting_init();
-
   hm01b0_init();
   lvld_timer_init();
 
@@ -92,6 +99,7 @@ void hm_peripheral_init(void)
 /*Activates the peripherals that change the power consumption, when connected and before taking picture*/
 void hm_peripheral_connected_init(void){
   spiSlaveInit();
+  spiSlaveSetBuffers();
 }
 
 void hm_single_capture_spi_832_stream(void){
@@ -119,7 +127,8 @@ void hm_single_capture_spi_832(void)
   #if(CAM_CLK_GATING == 1)
   nrf_drv_timer_enable(&CAM_TIMER);
   #endif
-  //nrf_delay_ms(100);
+
+  // delayMs(100);
   spiSlaveSetRxDone(0);
   bleSetPixelsSent(0);
   line_count = 0;
@@ -139,16 +148,19 @@ void hm_single_capture_spi_832(void)
   lvld_timer_enable();
   nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
 
-  i2cWrite16(CAMERA_I2C_ADDR,  REG_MODE_SELECT, capture_mode);//If we use the 0x03 mode for single capture, the power of camera stays high after capturing one frame
+  i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT, 0x3);//If we use the 0x03 mode for single capture, the power of camera stays high after capturing one frame
+  // i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT, capture_mode); // If we use the 0x03 mode for single capture, the power of camera stays high after capturing one frame
 
   while (!hm_get_capture_done()) {
+    NRF_LOG_PROCESS();
     __WFE();
   };
   while (!spiSlaveGetTransferDone()) {
+    NRF_LOG_PROCESS();
     __WFE();
   };
-  spiSlaveSetTransferDone(false);
 
+  spiSlaveSetTransferDone(false);
   spiSlaveSetRxDone(spiSlaveGetRxLength());
 }
 

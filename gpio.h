@@ -3,18 +3,18 @@
 #include "nrf_drv_gpiote.h"
 
 // SPI (IMU)
-#define SPI_SCK_PIN                       NRF_GPIO_PIN_MAP(0,5)
-#define SPI_MOSI_PIN                      NRF_GPIO_PIN_MAP(0,17)
-#define SPI_MISO_PIN                      NRF_GPIO_PIN_MAP(0,13)
-#define SPI_CS_PIN                        NRF_GPIO_PIN_MAP(0,3)
+#define SPI_SCK_PIN                       NRF_GPIO_PIN_MAP(0, 28)
+#define SPI_MOSI_PIN                      NRF_GPIO_PIN_MAP(0, 4)
+#define SPI_MISO_PIN                      NRF_GPIO_PIN_MAP(0, 13)
+#define SPI_CS_PIN                        NRF_GPIO_PIN_MAP(0, 3)
 
 // IMU
 #define ACCEL_INT1_PIN                    NRF_GPIO_PIN_MAP(0, 2)
 #define ACCEL_INT2_PIN                    NRF_GPIO_PIN_MAP(0, 31)
 
 // LED
-#define LED1_PIN                          NRF_GPIO_PIN_MAP(0,7)                 // not functional on revA design
-#define LED2_PIN                          NRF_GPIO_PIN_MAP(0,4)                 // 0 to turn on, 1 to turn off
+#define LED1_PIN                          NRF_GPIO_PIN_MAP(0, 7)                 // not functional on revA design
+#define LED2_PIN                          NRF_GPIO_PIN_MAP(0, 4)                 // 0 to turn on, 1 to turn off
 
 // Button
 #define BUTTON_PIN                        NRF_GPIO_PIN_MAP(0, 15)
@@ -31,13 +31,15 @@
 #define CAM_POWER                        NRF_GPIO_PIN_MAP(0, 18)
 #define CAM_SPI_CS_OUT                   NRF_GPIO_PIN_MAP(0, 12) // Goes to CAM_SPI_CS_IN
 #define CAM_SPI_CS_IN                    NRF_GPIO_PIN_MAP(0, 14) // Listens on CAM_SPI_CS_IN
-#define CAM_PCLK_OUT                     NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK
-#define CAM_D0                           NRF_GPIO_PIN_MAP(0, 20) // CAM_D0
+#define CAM_PCLK_OUT_TO_MCU              NRF_GPIO_PIN_MAP(1, 2) // CAM_PCLK (SPI CLK)
+#define CAM_D0                           NRF_GPIO_PIN_MAP(1, 3) // CAM_D0
 #define CAM_FRAME_VALID                  NRF_GPIO_PIN_MAP(0, 29) // Input
 #define CAM_LINE_VALID                   NRF_GPIO_PIN_MAP(0, 11) // Input
 #define CAM_INT                          NRF_GPIO_PIN_MAP(0, 9)  // Input
-#define CAM_MCLK_IN                      NRF_GPIO_PIN_MAP(1, 8)
-#define CAM_MISO                         NRF_GPIO_PIN_MAP(0, 30) // not used, just need to provide SDK a value
+#define CAM_MCLK_IN_FROM_MCU             NRF_GPIO_PIN_MAP(1, 8)
+
+#define TRACE_PIN_1                      NRF_GPIO_PIN_MAP(1, 14)
+#define TRACE_PIN_2                      NRF_GPIO_PIN_MAP(1, 15)
 
 // QSPI
 // These are located in sdk_config.h. They're placed here just for reference.

@@ -36,7 +36,7 @@ void hm_clk_out(void)
   nrf_ppi_channel_t ppi_channel;
   nrf_drv_gpiote_out_config_t config = GPIOTE_CONFIG_OUT_TASK_TOGGLE(false);
 
-  err_code = nrf_drv_gpiote_out_init(CAM_MCLK_IN, &config);
+  err_code = nrf_drv_gpiote_out_init(CAM_MCLK_IN_FROM_MCU, &config);
   APP_ERROR_CHECK(err_code);
 
   nrf_drv_timer_extended_compare(&CAM_TIMER, (nrf_timer_cc_channel_t)0, 1UL, NRF_TIMER_SHORT_COMPARE0_CLEAR_MASK, false);
@@ -45,7 +45,7 @@ void hm_clk_out(void)
   APP_ERROR_CHECK(err_code);
 
   compare_evt_addr = nrf_drv_timer_event_address_get(&CAM_TIMER, NRF_TIMER_EVENT_COMPARE0);
-  gpiote_task_addr = nrf_drv_gpiote_out_task_addr_get(CAM_MCLK_IN);
+  gpiote_task_addr = nrf_drv_gpiote_out_task_addr_get(CAM_MCLK_IN_FROM_MCU);
 
   err_code = nrf_drv_ppi_channel_assign(ppi_channel, compare_evt_addr, gpiote_task_addr);
   APP_ERROR_CHECK(err_code);
@@ -53,7 +53,7 @@ void hm_clk_out(void)
   err_code = nrf_drv_ppi_channel_enable(ppi_channel);
   APP_ERROR_CHECK(err_code);
 
-  nrf_drv_gpiote_out_task_enable(CAM_MCLK_IN);
+  nrf_drv_gpiote_out_task_enable(CAM_MCLK_IN_FROM_MCU);
 
   nrf_drv_timer_enable(&CAM_TIMER);
 }

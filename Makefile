@@ -84,7 +84,7 @@ SRC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/prs/nrfx_prs.c \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_pdm.c \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spim.c \
-	$(PROJ_DIR)/sdk_patch/nrfx_spis.c \
+	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_spis.c \
 	$(SDK_ROOT)/components/libraries/bsp/bsp.c \
 	$(SDK_ROOT)/components/libraries/bsp/bsp_btn_ble.c \
 	$(PROJ_DIR)/$(wildcard *.c) \
@@ -130,6 +130,7 @@ SRC_FILES += \
 	$(SDK_ROOT)/modules/nrfx/drivers/src/nrfx_twim.c \
 	$(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_twi.c \
 	$(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_ppi.c \
+	$(SDK_ROOT)/integration/nrfx/legacy/nrf_drv_spis.c \
 
 
 # Include folders common to all targets
@@ -195,6 +196,7 @@ INC_FOLDERS += \
 	$(PROJ_DIR)/config \
 	$(PROJ_DIR)/HM01B0 \
 	$(PROJ_DIR)/ \
+	$(PROJ_DIR)/sdk_patch \
 	$(SDK_ROOT)/components/libraries/balloc \
 	$(SDK_ROOT)/components/libraries/ecc \
 	$(SDK_ROOT)/components/libraries/hardfault \
