@@ -47,7 +47,7 @@ extern "C"
 
 #include "nrf_gpio.h"
 
-// LEDs definitions for PCA10056
+// LED definitions for balsamic PCB
 #define LEDS_NUMBER 2
 
 #define LED_1 NRF_GPIO_PIN_MAP(0, 7)

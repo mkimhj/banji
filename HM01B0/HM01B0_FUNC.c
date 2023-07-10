@@ -17,6 +17,7 @@ void hm01b0_init_fixed_rom_qvga_fixed(void)
 
   i2cWrite16(CAMERA_I2C_ADDR, REG_BIN_MODE, 0x00);    // VERTICAL BIN MODE
   i2cWrite16(CAMERA_I2C_ADDR, REG_QVGA_WIN_EN, 0x01); // Set line length LSB to QQVGA => enabled: makes the image 160(row)*240(col)
+  i2cWrite16(CAMERA_I2C_ADDR, REG_IO_DRIVE_STR, 0xFF);
 
   // 100*100 optimization
   i2cWrite16(CAMERA_I2C_ADDR, REG_BIN_RDOUT_X, 0x01); // Horizontal Binning enable
@@ -42,7 +43,7 @@ void hm01b0_init_fixed_rom_qvga_fixed(void)
   i2cWrite16(CAMERA_I2C_ADDR, 0x3058, 0x1F);
   //    i2cWrite16(CAMERA_I2C_ADDR, 0x3059,0x1E);//bit control
   i2cWrite16(CAMERA_I2C_ADDR, 0x3064, 0x00);
-  i2cWrite16(CAMERA_I2C_ADDR, 0x3065, 0x04);
+  // i2cWrite16(CAMERA_I2C_ADDR, REG_OUTPUT_PIN_STATUS_CONTROL, 0x04);
 
   // black level control
   i2cWrite16(CAMERA_I2C_ADDR, 0x1000, 0x43);

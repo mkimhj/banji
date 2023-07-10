@@ -1,10 +1,12 @@
 #include "i2c.h"
 #include "gpio.h"
 #include "camera.h"
-
+#include "HM01B0_SPI.h"
+#include "HM01B0_CLK.h"
 #include "nrf_cli.h"
 #include "nrf_cli_types.h"
 #include "nrf_cli_libuarte.h"
+#include "timers.h"
 
 #define CLI_EXAMPLE_LOG_QUEUE_SIZE (6)
 
@@ -45,7 +47,40 @@ static void cmd_i2c(nrf_cli_t const *p_cli, size_t argc, char **argv)
 static void cmd_cam_capture(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   cameraInit();
-  // cameraCaptureFrame();
+  cameraCaptureFrame();
+}
+
+static void cmd_cam_print(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  uint8_t* camData;
+  uint16_t camDataLength = 0;
+
+  camDataLength = spiSlaveGetRxBuffer(&camData);
+  NRF_LOG_RAW_INFO("camDataLength:%d\n", camDataLength);
+
+  bool dataExists = false;
+  uint16_t dataExistsAtIndex = 0;
+  for (uint16_t i = 0; i < camDataLength; i++) {
+    if (camData[i] != 0) {
+      dataExists = true;
+      dataExistsAtIndex = i;
+    }
+  }
+
+  if (dataExists) {
+    for (int i = 0; i < 100; i++) {
+      NRF_LOG_RAW_INFO("%d:%d ", dataExistsAtIndex+i, camData[dataExistsAtIndex+i]);
+    }
+  } else {
+    NRF_LOG_RAW_INFO("No data");
+  }
+
+  NRF_LOG_RAW_INFO("\n");
+}
+
+static void cmd_cam_clk(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  hm_clk_out();
 }
 
 // CAMERA COMMANDS
@@ -75,7 +110,9 @@ NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_i2c){
 NRF_CLI_CMD_REGISTER(i2c, &m_sub_i2c, "i2c", cmd_i2c);
 
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_cam){
+    NRF_CLI_CMD(clk, NULL, "Print all entered parameters.", cmd_cam_clk),
     NRF_CLI_CMD(capture, NULL, "Print all entered parameters.", cmd_cam_capture),
+    NRF_CLI_CMD(print, NULL, "Print all entered parameters.", cmd_cam_print),
     NRF_CLI_SUBCMD_SET_END};
 NRF_CLI_CMD_REGISTER(cam, &m_sub_cam, "camera", cmd_cam);
 
