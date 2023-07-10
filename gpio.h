@@ -11,6 +11,7 @@
 // IMU
 #define ACCEL_INT1_PIN                    NRF_GPIO_PIN_MAP(0, 2)
 #define ACCEL_INT2_PIN                    NRF_GPIO_PIN_MAP(0, 31)
+#define ACCEL_EN_PIN                      NRF_GPIO_PIN_MAP(0, 30)
 
 // LED
 #define LED1_PIN                          NRF_GPIO_PIN_MAP(0,7)                 // not functional on revA design
@@ -43,12 +44,18 @@
 
 // QSPI
 // These are located in sdk_config.h. They're placed here just for reference.
-// #define QSPI_PIN_SCK                     NRF_GPIO_PIN_MAP(0, 19) // Camera PCLK
-// #define QSPI_PIN_CSN                     NRF_GPIO_PIN_MAP(0, 29) // Frame Valid (FVLD)
-// #define QSPI_PIN_IO0                     NRF_GPIO_PIN_MAP(0, 20) // D0
-// #define QSPI_PIN_IO1                     NRF_GPIO_PIN_MAP(0, 21) // D1
-// #define QSPI_PIN_IO2                     NRF_GPIO_PIN_MAP(0, 22) // D2
-// #define QSPI_PIN_IO3                     NRF_GPIO_PIN_MAP(0, 23) // D3
+//#define NRFX_QSPI_PIN_SCK                NRF_GPIO_PIN_MAP(0, 19) // Camera PCLK
+//#define NRFX_QSPI_PIN_CSN                NRF_GPIO_PIN_MAP(0, 29) // Frame Valid (FVLD)
+//#define NRFX_QSPI_PIN_IO0                NRF_GPIO_PIN_MAP(0, 20) // D0 
+//#define NRFX_QSPI_PIN_IO1                NRF_GPIO_PIN_MAP(0, 21) // D1
+//#define NRFX_QSPI_PIN_IO2                NRF_GPIO_PIN_MAP(0, 22) // D2
+//#define NRFX_QSPI_PIN_IO3                NRF_GPIO_PIN_MAP(0, 23) // D3
+
+// Camera 
+#define NRF_DVP_INT                      NRF_GPIO_PIN_MAP(0, 9) // INT 
+#define NRF_DVP_LVLD                     NRF_GPIO_PIN_MAP(0, 11) // Line Valid (LVLD)
+#define NRF_DVP_TRIG                     NRF_GPIO_PIN_MAP(0, 25) // Trigger (TRIG)
+#define NRF_DVP_MCLK                     NRF_GPIO_PIN_MAP(1, 8) // Master Clock (MCLK)
 
 // Wrapper
 #define GPIO_INTERRUPT_CONFIG_RISING  GPIOTE_CONFIG_IN_SENSE_LOTOHI(true)

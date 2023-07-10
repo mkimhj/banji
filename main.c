@@ -41,6 +41,7 @@
 #include "event.h"
 #include "gpio.h"
 #include "accel.h"
+#include "imu.h"
 #include "spi.h"
 #include "i2c.h"
 #include "flash.h"
@@ -80,6 +81,10 @@ void powerEnterSleepMode(void)
   APP_ERROR_CHECK(err_code);
 
   // Drive enable signals low before shutting down
+  //gpioOutputEnable(MIC_EN_PIN);
+  //gpioWrite(MIC_EN_PIN, 0);
+  //gpioOutputEnable(ACCEL_EN_PIN);
+  //gpioWrite(ACCEL_EN_PIN, 0);
 
   spiDeInit();
   delayMs(1);
@@ -150,7 +155,7 @@ static void powerInit(void)
 static void idle(void)
 {
   if (NRF_LOG_PROCESS() == false && eventQueueEmpty()) {
-    nrf_pwr_mgmt_run();
+    //nrf_pwr_mgmt_run();
   }
 }
 
@@ -179,6 +184,7 @@ static void banjiInit(void)
 
   powerInit();
 
+  imuInit();
   bleInit();
   bleAdvertisingStart();
 
