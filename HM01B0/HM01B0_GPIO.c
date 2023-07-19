@@ -23,11 +23,6 @@ void in_pin_handler_CAM_LINE_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity
     nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
     lvld_timer_disable();
     NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
-
-    #if (CAM_FRAME_VALID_INT == 1)
-      spiSlaveSetRxDone(spiSlaveGetRxLength());
-      bleSetPixelsSent(0);
-    #endif
     hm_set_capture_done();
   }
 }
@@ -37,7 +32,6 @@ void in_pin_handler_CAM_FRAME_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarit
   nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
   nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
   line_count = 0;
-  spiSlaveSetRxDone(0);
   lvld_timer_enable();
 }
 

@@ -45,17 +45,21 @@
 #include "i2c.h"
 #include "flash.h"
 #include "cli.h"
+#include "camera.h"
 #include "main.h"
 
 #include "boards.h"
 #include "nrf_ppi.h"
 #include "nrf_timer.h"
+#include "HM01B0_BLE_DEFINES.h"
 
 APP_TIMER_DEF(resetTimer);
 
 static bool bleRetry = false;
-static bool bleMicStreamRequested = false;
+static bool bleDataStreamRequested = false;
 static uint32_t expectedBufferCount = 0;
+static uint8_t frameCount = 0;
+static bool streaming = false;
 
 static uint8_t metadataIndex = 0;
 static uint8_t metadata[180] = { 0 };
@@ -156,6 +160,7 @@ static void idle(void)
 
 static void banjiInit(void)
 {
+  gpioInit();
   logInit();
   NRF_LOG_RAW_INFO("%08d [banji] booting...\n", systemTimeGetMs());
 
@@ -167,8 +172,6 @@ static void banjiInit(void)
   cliInit();
 
   NRF_LOG_RAW_INFO("Press the Tab key to see all available commands.\n");
-
-  gpioInit();
 
   eventQueueInit();
   buttons_leds_init(); // one of these
@@ -199,25 +202,42 @@ static void processQueue(void)
       case EVENT_BLE_DATA_STREAM_START:
         NRF_LOG_RAW_INFO("%08d [ble] stream start\n", systemTimeGetMs());
 
-        NRF_TIMER3->TASKS_CAPTURE[3] = 1;
-        uint32_t timer3 = NRF_TIMER3->CC[3];
-        nrf_ppi_channel_enable(NRF_PPI_CHANNEL5);
-        NRF_LOG_RAW_INFO("%08d [main] PPI ENABLE %u\n", systemTimeGetMs(), timer3);
-
-        metadata[0] = (timer3 >> 24) & 0xFF;
-        metadata[1] = (timer3 >> 16) & 0xFF;
-        metadata[2] = (timer3 >> 8) & 0xFF;
-        metadata[3] = timer3 & 0xFF;
-
-        bleSendData(metadata, 180);
-
-        bleMicStreamRequested = true;
+        bleDataStreamRequested = true;
+        // start camera stream here?
         break;
 
       case EVENT_BLE_DATA_STREAM_STOP:
       {
         NVIC_SystemReset();
-        // app_timer_start(resetTimer, APP_TIMER_TICKS(2000), NULL);
+        break;
+      }
+
+      case EVENT_CAMERA_STREAM_START:
+      {
+        cameraInit();
+        cameraStartStream();
+        streaming = true;
+        break;
+      }
+
+      case EVENT_CAMERA_STREAM_STOP:
+      {
+        break;
+      }
+
+      case EVENT_CAMERA_CAPTURE_DONE:
+      {
+        NRF_LOG_RAW_INFO("%08d [cam] EVENT_CAMERA_CAPTURE_DONE\n", systemTimeGetMs());
+        uint8_t *camData;
+        uint16_t camDataLength = cameraGetFrameBuffer(&camData);
+        bleSendData(camData, camDataLength);
+        break;
+      }
+
+      case EVENT_CAMERA_READY_NEXT_FRAME:
+      {
+        NRF_LOG_RAW_INFO("%08d [cam] EVENT_CAMERA_READY_NEXT_FRAME\n", systemTimeGetMs());
+        cameraReadyNextFrame();
         break;
       }
 
@@ -227,29 +247,16 @@ static void processQueue(void)
 
       case EVENT_BLE_SEND_DATA_DONE:
         // BLE just finished, attempt to fill in more data
-        send();
+        // send();
         break;
 
       case EVENT_BLE_IDLE:
-        powerEnterSleepMode();
+        // powerEnterSleepMode();
         break;
 
       case EVENT_BLE_DISCONNECTED:
         NVIC_SystemReset();
         break;
-
-      case EVENT_TIMERS_ONE_SECOND_ELAPSED:
-        break;
-
-      case EVENT_METADATA_SAVE_TIMESTAMP:
-      {
-        uint32_t timestamp = systemTimeGetMs();
-        metadata[metadataIndex++ % 180]  = (timestamp >> 24) & 0xFF;
-        metadata[metadataIndex++ % 180] = (timestamp >> 16) & 0xFF;
-        metadata[metadataIndex++ % 180] = (timestamp >> 8) & 0xFF;
-        metadata[metadataIndex++ % 180] = timestamp & 0xFF;
-        break;
-      }
 
       default:
         NRF_LOG_RAW_INFO("%08d [main] unhandled event:%d\n", systemTimeGetMs(), eventQueueFront());
@@ -267,7 +274,10 @@ int main(void)
   for (;;)
   {
     idle();
-    processQueue();
     cliProcess();
+    processQueue();
+    if (streaming) {
+      bleService();
+    }
   }
 }

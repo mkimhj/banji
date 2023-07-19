@@ -50,7 +50,7 @@ static uint16_t pixel = 0;
 static void cmd_cam_capture(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   cameraInit();
-  cameraCaptureFrame();
+  cameraStartStream();
   pixel = 0;
 }
 

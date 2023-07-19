@@ -61,6 +61,10 @@ static void on_write(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
       eventQueuePush(EVENT_AUDIO_STREAM_START);
     } else if (p_evt_write->data[0] == 0xEF) {
       eventQueuePush(EVENT_AUDIO_STREAM_STOP);
+    } else if (p_evt_write->data[0] == 0xB1) {
+      eventQueuePush(EVENT_CAMERA_STREAM_START);
+    } else if (p_evt_write->data[0] == 0xB0) {
+      eventQueuePush(EVENT_CAMERA_STREAM_STOP);
     }
   }
 
@@ -69,22 +73,22 @@ static void on_write(ble_cus_t * p_cus, ble_evt_t const * p_ble_evt)
   }
 }
 
-static uint32_t mic_char_add(ble_cus_t * p_cus, const ble_cus_init_t * p_cus_init)
+static uint32_t data_char_add(ble_cus_t * p_cus, const ble_cus_init_t * p_cus_init)
 {
   uint32_t err_code;
-  ble_add_char_params_t mic_params;
-  memset(&mic_params, 0, sizeof(mic_params));
+  ble_add_char_params_t data_params;
+  memset(&data_params, 0, sizeof(data_params));
 
-  mic_params.uuid              = MIC_CHAR_UUID;
-  mic_params.uuid_type         = p_cus->uuid_type;
-  mic_params.max_len           = NRF_SDH_BLE_GATT_MAX_MTU_SIZE;
-  mic_params.char_props.notify = 1;
-  // mic_params.char_props.write_wo_resp = 1; // to enable writing
-  // mic_params.char_props.read = 1;          // to enable reading
-  mic_params.cccd_write_access = SEC_OPEN;
-  mic_params.is_var_len        = 1;
+  data_params.uuid              = DATA_CHAR_UUID;
+  data_params.uuid_type         = p_cus->uuid_type;
+  data_params.max_len           = NRF_SDH_BLE_GATT_MAX_MTU_SIZE;
+  data_params.char_props.notify = 1;
+  // data_params.char_props.write_wo_resp = 1; // to enable writing
+  // data_params.char_props.read = 1;          // to enable reading
+  data_params.cccd_write_access = SEC_OPEN;
+  data_params.is_var_len        = 1;
 
-  err_code = characteristic_add(p_cus->service_handle, &mic_params, &(p_cus->mic_value_handles));
+  err_code = characteristic_add(p_cus->service_handle, &data_params, &(p_cus->mic_value_handles));
   APP_ERROR_CHECK(err_code);
 
   // TODO: Find a better place to put this, and reset this
@@ -176,7 +180,7 @@ bool ble_cus_transmit(ble_cus_t * p_cus, uint8_t * data, uint16_t length)
   if (err_code == NRF_ERROR_RESOURCES) {
     return false; // return busy flag
   } else if (err_code != NRF_SUCCESS) {
-    NRF_LOG_ERROR("sd_ble_gatts_hvx() failed: 0x%x", err_code);
+    NRF_LOG_ERROR("ble_cus_transmit failed: 0x%x", err_code);
     return false;
   }
 
@@ -215,7 +219,7 @@ uint32_t ble_cus_init(ble_cus_t * p_cus, const ble_cus_init_t * p_cus_init)
   VERIFY_SUCCESS(err_code);
 
   // Add Mic Characteristic
-  mic_char_add(p_cus, p_cus_init);
+  data_char_add(p_cus, p_cus_init);
 
   // Add Control Characteristic
   control_char_add(p_cus, p_cus_init);
@@ -241,7 +245,7 @@ uint32_t ble_cus_control_char_write(ble_cus_t * p_cus, uint8_t data)
   if (err_code == NRF_ERROR_RESOURCES) {
     return false; // return busy flag
   } else if (err_code != NRF_SUCCESS) {
-    NRF_LOG_ERROR("sd_ble_gatts_hvx() failed: 0x%x", err_code);
+    NRF_LOG_ERROR("ble_cus_control_char_write failed: 0x%x", err_code);
     return false;
   }
 

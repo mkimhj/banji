@@ -42,18 +42,44 @@ void cameraDeInit(void)
 
 void cameraCaptureFrame(void)
 {
-  // TODO: From Ali's code, not sure why we need this
-  // if (ble_bytes_sent_counter >= spiSlaveGetRxDone())
-  // {
-    NRF_LOG_INFO("Starting capture...");
+  NRF_LOG_RAW_INFO("[cam] starting capture...\n");
+  hm_single_capture_spi_832();
+  NRF_LOG_RAW_INFO("[cam] Capture complete: size %i bytes\n", spiSlaveGetBytesReceived());
+}
 
-    hm_single_capture_spi_832();
+void cameraStartStream(void)
+{
+  NRF_LOG_RAW_INFO("Starting stream...\n");
+  hm_single_capture_spi_832_stream();
+}
 
-    NRF_LOG_INFO("Capture complete: size %i bytes", (uint32_t)(spiSlaveGetRxLength()));
+uint32_t cameraGetFrameBuffer(uint8_t** frame)
+{
+  return spiSlaveGetRxBuffer(frame);
+}
 
-    // Queue event to send image upstream here
-    // ble_its_img_info_t image_info;
-    // image_info.file_size_bytes = m_length_rx;
-    // ble_its_img_info_send(&m_its, &image_info);
-  // }
+void cameraReadyNextFrame(void)
+{
+  spiSlaveSetBuffers();
+
+  /*Camera values initialized*/
+  hm_reset_capture_done();
+
+  /*Enable the FRAME VALID interrupt*/
+  nrf_drv_gpiote_in_event_enable(CAM_FRAME_VALID, true);
+}
+
+uint32_t cameraGetLines(uint8_t** lines)
+{
+  return spiSlaveGetRxBufferStreaming(lines);
+}
+
+uint32_t cameraGetBytesReceived(void)
+{
+  return spiSlaveGetBytesReceived();
+}
+
+void cameraReadyForMoreData(void)
+{
+  spiSlaveClearEventQueued();
 }

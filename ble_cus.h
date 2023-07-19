@@ -18,7 +18,7 @@
 // When adding/changing a characteristic, turn bluetooth off and on in your device's settings
 #define CUSTOM_SERVICE_UUID               0x1400
 #define CUSTOM_VALUE_CHAR_UUID            0x1401
-#define MIC_CHAR_UUID                     0x1402
+#define DATA_CHAR_UUID                    0x1402
 #define CONTROL_CHAR_UUID                 0x1403
 
 #define BLE_CUS_DEF(_name) \
