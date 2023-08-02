@@ -10,6 +10,18 @@
 #include "pmu.h"
 #include "i2c.h"
 
+#define MAX77650_debug true
+
+// Target Voltages
+#define TV_SBB0 0x1C // 1.5V
+#define TV_SBB1 0x20 // 2.8V 
+#define TV_SBB2 0x08 // 2.8V
+#define TV_LDO  0x05 // 1.5V
+
+// Charging Configuration
+#define CHG_CV  0x04 // 3.7V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
+#define CHG_CC  0x27 // 300 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
+
 uint8_t MAX77650_read_register(uint8_t ADDR){
     return i2cRead8(MAX77651_I2C_ADDRESS, ADDR);
 }
@@ -865,7 +877,7 @@ bool MAX77650_setDBEN_nEN(bool target_val){ //Returns Debounce Timer Enable for 
   else
    return false;  
 }
-bool MAX77650_setSFT_RST(uint8_t target_val){ //Returns Software Reset Functions.
+bool MAX77650_setSFT_RSTt(uint8_t target_val){ //Returns Software Reset Functions.
   MAX77650_write_register(MAX77650_CNFG_GLBL_ADDR,((MAX77650_read_register(MAX77650_CNFG_GLBL_ADDR) & 0b11111100) | ((target_val & 0b00000011) << 0)));
   if(MAX77650_getSFT_RST()==target_val)
    return true;
@@ -928,298 +940,361 @@ bool MAX77650_setINT_M_CHG(uint8_t target_val){ //Sets Global Interrupt Mask Reg
    return false;   
 }
 
+static void pmu_print_error(bool rslt){
+  if (rslt){
+    NRF_LOG_RAW_INFO("okay\n");
+  }else{
+    NRF_LOG_RAW_INFO("failed\n");
+  }
+}
+
 void pmu_init(void){
 
     //Baseline Initialization following rules printed in MAX77650 Programmres Guide Chapter 4 Page 5
+
+    // Set Main Bias to normal Mode
+    if(MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set Main Bias to normal Mode: ");
+      pmu_print_error(MAX77650_setSBIA_LPM(false));
+    }else{
+      MAX77650_setSBIA_LPM(false);
+    }
+
+    // Set On/Off-Button to push-button-mode 
+    if(MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set On/Off-Button to push-button-mode: ");
+      pmu_print_error(MAX77650_setnEN_MODE(false));
+    }else{
+      MAX77650_setnEN_MODE(false);
+    }
+
+    // Set nEN input debounce time to 30ms 
+    if(MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set nEN input debounce time to 30ms: ");
+      pmu_print_error(MAX77650_setDBEN_nEN(true));
+     }else{
+      MAX77650_setDBEN_nEN(true);
+    }
+
+    // Compare part-numbers
+    NRF_LOG_RAW_INFO("Comparing part-numbers: ");
+    pmu_print_error(MAX77650_getDIDM() == PMIC_partnumber);
+
+    // Check OTP Options
+    NRF_LOG_RAW_INFO("Checking OTP options: ");
+    pmu_print_error(MAX77650_getCID() != MAX77650_CID);
+
+    // Set VCOLD JEITA Temperature Threshold to 0°C
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Set Main Bias to normal Mode: ");
+      NRF_LOG_RAW_INFO("Set the VCOLD JEITA Temperature Threshold to 0°C: ");
+      pmu_print_error(MAX77650_setTHM_COLD(2)); 
+    }else{
+      MAX77650_setTHM_COLD(2);
     }
-    if (MAX77650_setSBIA_LPM(false)) {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
+
+    // Set VCOOL JEITA Temperature Threshold to 15°C 
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the VCOOL JEITA Temperature Threshold to 15°C: ");
+      pmu_print_error(MAX77650_setTHM_COOL(3));
+    }else{
+      MAX77650_setTHM_COOL(3);
+    }
+
+    // Set VWARM JEITA Temperature Threshold to 45°C
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the VWARM JEITA Temperature Threshold to 45°C: ");
+      pmu_print_error(MAX77650_setTHM_WARM(2));
+    }else{
+      MAX77650_setTHM_WARM(2);
+    }
+
+    // Set VHOT JEITA Temperature Threshold to 60°C
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the VHOT JEITA Temperature Threshold to 60°C: ");
+      pmu_print_error(MAX77650_setTHM_HOT(3));
+    }else{
+      MAX77650_setTHM_HOT(3);
+    }
+
+    /*********** Set Fast Charge regulation voltage ************/
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set CHGIN regulation voltage to 3.70V: ");
+      pmu_print_error(MAX77650_setVCHGIN_MIN(CHG_CV));
+    }else{
+      MAX77650_setVCHGIN_MIN(0);
     }
 
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Set On/Off-Button to push-button-mode: ");
+      NRF_LOG_RAW_INFO("Set CHGIN Input Current Limit to 95 mA: ");
+      pmu_print_error(MAX77650_setICHGIN_LIM(0));
+    }else{
+      MAX77650_setICHGIN_LIM(0);
     }
-    if (MAX77650_setnEN_MODE(false)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    } 
 
+    // Set prequalification charge current to 10%
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Set nEN input debounce time to 30ms: ");
+      NRF_LOG_RAW_INFO("Set the prequalification charge current to 10%: ");
+      pmu_print_error(MAX77650_setI_PQ(false));
+    }else{
+      MAX77650_setI_PQ(false);
     }
-    if (MAX77650_setDBEN_nEN(true)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
 
+    // Set prequalification charge voltage to 3.0V
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Comparing part-numbers: ");
+      NRF_LOG_RAW_INFO("Set Battery prequalification voltage threshold to 3.0V: ");
+      pmu_print_error(MAX77650_setCHG_PQ(0b111));
+    }else{
+      MAX77650_setCHG_PQ(0b111);
     }
-    if (MAX77650_getDIDM() == PMIC_partnumber){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    } 
 
+    // Set charger termination current to 15% of fast charge current
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Checking OTP options: ");
+      NRF_LOG_RAW_INFO("Set Charger Termination Current to 15% of of fast charge current: ");
+      pmu_print_error(MAX77650_setI_TERM(0b11));
+    }else{
+      MAX77650_setI_TERM(0b11);
     }
-    if (MAX77650_getCID() != MAX77650_CID){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } 
-    //Values for NTC beta=3800K; Battery-values are for 1s 303759 with 600mAh
 
+    // Set topoff timer value to 0 minutes
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Set the VCOLD JEITA Temperature Threshold to 0°C: ");
+      NRF_LOG_RAW_INFO("Set Topoff timer value to 0 minutes: ");
+      pmu_print_error(MAX77650_setT_TOPOFF(0b000));
+    }else{
+      MAX77650_setT_TOPOFF(0);
     }
-    if (MAX77650_setTHM_COLD(2)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //0°C
-     
+
+    // Set die junction temperature regulation point to 60°C
     if (MAX77650_debug){
-        NRF_LOG_RAW_INFO("Set the VCOOL JEITA Temperature Threshold to 15°C: ");
+      NRF_LOG_RAW_INFO("Set the die junction temperature regulation point to 60°C: ");
+      pmu_print_error(MAX77650_setTJ_REG(0));
+    }else{
+      MAX77650_setTJ_REG(0);
     }
-    if (MAX77650_setTHM_COOL(3)) 
+
+    /********** Set System Voltage Regulation to 4.5V **********/
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set System voltage regulation to 4.50V: ");
+      pmu_print_error(MAX77650_setVSYS_REG(0x10));
+    }else{
+      MAX77650_setVSYS_REG(0x10);
+    }
+
+    /********* Set Fast Charge constant current **************/
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the fast-charge constant current value to 7.5mA: ");
+      pmu_print_error(MAX77650_setCHG_CC(CHG_CC));
+    }else{
+      MAX77650_setCHG_CC(0x00);
+    }
+
+    // set fast charge safety timer
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the fast-charge safety timer to 3h: ");
+      pmu_print_error(MAX77650_setT_FAST_CHG(0x01));
+    }else{
+      MAX77650_setT_FAST_CHG(0x01);
+    }
+
+    // Set IFAST-CHG_JEITA to 7.5mA
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set IFAST-CHG_JEITA to 7.5mA: ");
+      pmu_print_error(MAX77650_setCHG_CC_JEITA(0x00));
+    }else{
+      MAX77650_setCHG_CC_JEITA(0x00);
+    }
+
+    // Disable Temperature monitoring
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Disable Temperature monitoring: ");
+      pmu_print_error(MAX77650_setTHM_EN(false));
+    }else{
+      MAX77650_setTHM_EN(false);
+    }
 
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the VWARM JEITA Temperature Threshold to 45°C: ");
-    if (MAX77650_setTHM_WARM(2)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    //45°C
+    /******** Set fast-charge constant voltage ************/
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set fast-charge battery regulation voltage to 3.7V: ");
+      pmu_print_error(MAX77650_setCHG_CV(CHG_CV));
+    }else{
+      MAX77650_setCHG_CV(0x04);
+    }
+    
+    // Set JEITA VFAST-CHG to 3.70V
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the modified VFAST-CHG to 3.7V: ");
+      pmu_print_error(MAX77650_setCHG_CV_JEITA(CHG_CV));
+    }else{
+      MAX77650_setCHG_CV_JEITA(0x04);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the VHOT JEITA Temperature Threshold to 60°C: ");
-    if (MAX77650_setTHM_HOT(3)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    //60°C
+    // Set USB not in power down (CHGIN not suspended and can draw current from adapter)
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set USB not in power down: ");
+      pmu_print_error(MAX77650_setUSBS(false));
+    }else{
+      MAX77650_setUSBS(false);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set CHGIN regulation voltage to 4.00V: ");
-    if (MAX77650_setVCHGIN_MIN(0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
+    // Selects the battery discharge current full-scale current value to 300mA
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Selects the battery discharge current full-scale current value to 300mA: ");
+      pmu_print_error(MAX77650_setIMON_DISCHG_SCALE(0x0A));
+    }else{
+      MAX77650_setIMON_DISCHG_SCALE(0x0A);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set CHGIN Input Current Limit to 300mA: ");
-    if (MAX77650_setICHGIN_LIM(0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }     //300mA
+    // Disable the analog MUX output
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Disable the analog MUX output: ");
+      pmu_print_error(MAX77650_setMUX_SEL(0));
+    }else{
+      MAX77650_setMUX_SEL(0);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the prequalification charge current to 10%: ");
-    if (MAX77650_setI_PQ(false)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //10%
+    // Set the charger to Enable
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set the Charger to Enable: ");
+      pmu_print_error(MAX77650_setCHG_EN(true));
+    }else{
+      MAX77650_setCHG_EN(true);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set Battery prequalification voltage threshold to 3.0V: ");
-    if (MAX77650_setCHG_PQ(7)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //3.0V
+    // Disable SIMO Buck-Boost Channel 0 Active-Discharge
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 0 Active-Discharge: ");
+      pmu_print_error(MAX77650_setADE_SBB0(false));
+    }else{
+      MAX77650_setADE_SBB0(false);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set Charger Termination Current to 15% of of fast charge current: ");
-    if (MAX77650_setI_TERM(3)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //15%
+    // Disable SIMO Buck-Boost Channel 1 Active-Discharge
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 1 Active-Discharge: ");
+      pmu_print_error(MAX77650_setADE_SBB1(false));
+    }else{
+      MAX77650_setADE_SBB1(false);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set Topoff timer value to 0 minutes: ");
-    if (MAX77650_setT_TOPOFF(0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //0 minutes
+    // Disable SIMO Buck-Boost Channel 2 Active-Discharge
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 2 Active-Discharge: ");
+      pmu_print_error(MAX77650_setADE_SBB2(false));
+    }else{
+      MAX77650_setADE_SBB2(false);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the die junction temperature regulation point to 60°C: ");
-    if (MAX77650_setTJ_REG(0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //60°C Tj
+    // Set SIMO Buck-Boost Channel to maximum drive strength
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set SIMO Buck-Boost to maximum drive strength: ");
+      pmu_print_error(MAX77650_setDRV_SBB(0b00));
+    }else{
+      MAX77650_setDRV_SBB(0b00);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set System voltage regulation to 4.50V: ");
-    if (MAX77650_setVSYS_REG(0x10)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //Vsys=4.5V
+    // Set SIMO Buck-Boost Channel 0 Peak Current Limit to 500mA
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 0 Peak Current Limit to 500mA: ");
+      pmu_print_error(MAX77650_setIP_SBB0(0b00));
+    }else{
+      MAX77650_setIP_SBB0(0b00);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the fast-charge constant current value to 7.5mA: ");
-    if (MAX77650_setCHG_CC(0x00)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //300mA
+    // Set SIMO Buck-Boost Channel 1 Peak Current Limit to 500mA
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 1 Peak Current Limit to 500mA: ");
+      pmu_print_error(MAX77650_setIP_SBB1(0b00));
+    }else{
+      MAX77650_setIP_SBB1(0b00);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the fast-charge safety timer to 3h: ");
-    if (MAX77650_setT_FAST_CHG(1)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //3h
+    // Set SIMO Buck-Boost Channel 2 Peak Current Limit to 500mA
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 2 Peak Current Limit to 500mA: ");
+      pmu_print_error(MAX77650_setIP_SBB2(0b00));
+    }else{
+      MAX77650_setIP_SBB2(0b00);
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set IFAST-CHG_JEITA to 300mA: ");
-    if (MAX77650_setCHG_CC_JEITA(0x3f)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //300mA
+    /******* Set and Enable Output Voltages ********/
+   
+    
+    // SBB0 
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Enable SBB0 Output to 1.5V: ");
+      pmu_print_error(MAX77650_setTV_SBB0(TV_SBB0)); //Set output Voltage of SBB0 to 1.5V
+      pmu_print_error(MAX77650_setEN_SBB0(0b110));  // Enable
+    }else{
+      MAX77650_setTV_SBB0(TV_SBB0);
+      MAX77650_setEN_SBB0(0b110);
+    }
 
-    //if (MAX77650_debug) NRF_LOG_RAW_INFO("Set Thermistor enable bit: ");
-    //if (MAX77650_setTHM_EN(true)) if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n"); else if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");     //enable the thermistor monitoring
+    // SBBB1
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Enable SBB1 Output to 2.8V: ");
+      pmu_print_error(MAX77650_setTV_SBB1(TV_SBB1)); //Set output Voltage of SBB1 to 2.8V
+      pmu_print_error(MAX77650_setEN_SBB1(0b110)); 
+    }else{
+      MAX77650_setTV_SBB1(TV_SBB1); //Set output Voltage of SBB1 to 2.8V
+      MAX77650_setEN_SBB1(0b110); // Enable 
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set fast-charge battery regulation voltage to 3.7V: ");
-    if (MAX77650_setCHG_CV(0x04)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //4.20V
+    // SBB2
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Enable SBB2 Output to 2.8V: ");
+      pmu_print_error(MAX77650_setTV_SBB2(TV_SBB2)); //Set output Voltage of SBB2 to 2.8V
+      pmu_print_error(MAX77650_setEN_SBB2(0b110)); //Enable 
+    }else{
+      MAX77650_setTV_SBB2(TV_SBB2); //Set output Voltage of SBB2 to 2.8V
+      MAX77650_setEN_SBB2(0b110); //Enable SBB2 
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set USB not in power down: ");
-    if (MAX77650_setUSBS(false)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //USBS not suspended
+    // LDO
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Enable LDO Output to 2.8V: ");
+      pmu_print_error(MAX77650_setTV_LDO(TV_LDO)); //Set output Voltage of LDO to 2.8V
+      pmu_print_error(MAX77650_setEN_LDO(true)); //Enable LDO
+    }else{
+      MAX77650_setTV_LDO(TV_LDO); //Set output Voltage of LDO to 2.8V
+      MAX77650_setEN_LDO(true); //Enable LDO
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the modified VFAST-CHG to 4.00V: ");
-    if (MAX77650_setCHG_CV_JEITA(0x10)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //4.0V
+    NRF_LOG_RAW_INFO("SIMO Buck-Boost Voltage Channel 0: ");
+    NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_SBB0() * 0.025 + 0.8));
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Selects the battery discharge current full-scale current value to 300mA: ");
-    if (MAX77650_setIMON_DISCHG_SCALE(0x0A)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //300mA
+    NRF_LOG_RAW_INFO("SIMO Buck-Boost Voltage Channel 2: ");
+    if (!(MAX77650_getDIDM())){
+      NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_SBB2() * 0.05 + 0.8));
+    }
+    else{
+      NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_SBB2() * 0.05 + 2.4));
+    }
 
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Disable the analog MUX output: ");
-    if (MAX77650_setMUX_SEL(0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //AMUX=off
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set the Charger to Enable: ");
-    if (MAX77650_setCHG_EN(true)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   //enable the Charger
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 0 Active-Discharge: ");
-    if (MAX77650_setADE_SBB0(false)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 1 Active-Discharge: ");
-    if (MAX77650_setADE_SBB1(false)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 2 Active-Discharge: ");
-    if (MAX77650_setADE_SBB1(false)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set SIMO Buck-Boost to maximum drive strength: ");
-    if (MAX77650_setDRV_SBB(0b00)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 0 Peak Current Limit to 500mA: ");
-    if (MAX77650_setIP_SBB0(0b00)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 1 Peak Current Limit to 500mA: ");
-    if (MAX77650_setIP_SBB1(0b00)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 2 Peak Current Limit to 500mA: ");
-    if (MAX77650_setIP_SBB2(0b00)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Set SIMO Buck-Boost Channel 2 to on while in stand-by-mode: ");
-    if (MAX77650_setEN_SBB2(0b110)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Initialize Global Interrupt Mask Register: ");
-    if (MAX77650_setINT_M_GLBL(0x0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }   
-
-    if (MAX77650_debug) NRF_LOG_RAW_INFO("Initialize Charger Interrupt Mask Register: ");
-    if (MAX77650_setINT_M_CHG(0x0)){
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("okay\n");
-    } else {
-        if (MAX77650_debug) NRF_LOG_RAW_INFO("failed\n");
-    }    
-
-    // Setting Output Voltages
-    MAX77650_setTV_SBB0(0x1C); //Set output Voltage of SBB0 to 1.5V
-    MAX77650_setADE_SBB0(0b0); //Disable Active Discharge at SBB0 Output
-    MAX77650_setEN_SBB0(0b110); //Enable SBB0 is on irrespective of FPS whenever the on/off controller is in its "On via Software" or "On via On/Off Controller" states
-
-    MAX77650_setTV_SBB1(0x20); //Set output Voltage of SBB1 to 2.8V
-    MAX77650_setADE_SBB1(0b0); //Disable Active Discharge at SBB1 Output
-    MAX77650_setEN_SBB1(0b110); //Enable SBB1 is on irrespective of FPS whenever the on/off controller is in its "On via Software" or "On via On/Off Controller" states
-
-    MAX77650_setTV_SBB2(0x08); //Set output Voltage of SBB2 to 2.8V
-    MAX77650_setADE_SBB2(0b0); //Disable Active Discharge at SBB2 Output
-    MAX77650_setEN_SBB2(0b110); //Enable SBB2 is on irrespective of FPS whenever the on/off controller is in its "On via Software" or "On via On/Off Controller" states
-
-    MAX77650_setTV_LDO(0x74); //Set output Voltage of LDO to 2.8V
-    MAX77650_setEN_LDO(true);
+    NRF_LOG_RAW_INFO("LDO Voltage: ");
+    NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_LDO() * 0.0125 + 1.35));
 
 
-     //Read and clear Interrupt Registers
+    /*********** Global Interrupts ************/
+
+    // Initialize Global Interrupt Mask Register
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Initialize Global Interrupt Mask Register: ");
+      pmu_print_error(MAX77650_setINT_M_GLBL(0x0));
+    }else{
+      MAX77650_setINT_M_GLBL(0x0);
+    }
+
+    // Initialize Charger Interrupt Mask Register
+    if (MAX77650_debug){
+      NRF_LOG_RAW_INFO("Initialize Charger Interrupt Mask Register: ");
+      pmu_print_error(MAX77650_setINT_M_CHG(0x0));
+    }else{
+      MAX77650_setINT_M_CHG(0x0);
+    }
+
+    //Read and clear Interrupt Registers
     MAX77650_getINT_GLBL();
     MAX77650_getINT_CHG();
     MAX77650_getERCFLAG();
-
-
 
 }

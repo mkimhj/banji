@@ -215,7 +215,7 @@ static void cmd_pmu_init(nrf_cli_t const *p_cli, size_t argc, char **argv)
 static void cmd_pmu_read_reg(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   uint8_t regAddr = (uint8_t)strtol(argv[1], NULL, 16);
-  uint8_t regVal = i2cRead8(MAX77650_I2C_ADDRESS, regAddr);
+  uint8_t regVal = MAX77650_read_register(regAddr);
   NRF_LOG_RAW_INFO("reg 0x%x = 0x%x\n", regAddr, regVal);
 }
 
@@ -224,7 +224,7 @@ static void cmd_pmu_write_reg(nrf_cli_t const *p_cli, size_t argc, char **argv)
   uint8_t regAddr = (uint8_t)strtol(argv[1], NULL, 16);
   uint8_t regVal = (uint8_t)strtol(argv[2], NULL, 16);
   NRF_LOG_RAW_INFO("reg 0x%x = 0x%x\n", regAddr, regVal);
-  i2cWrite8(MAX77650_I2C_ADDRESS,regAddr, regVal);
+  MAX77650_write_register(regAddr, regVal);
 
 }
 
