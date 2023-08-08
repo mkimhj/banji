@@ -32,10 +32,10 @@
 #define CAM_POWER                         NRF_GPIO_PIN_MAP(0, 18)
 #define CAM_SPI_CS_OUT                    NRF_GPIO_PIN_MAP(0, 12)  // Goes to CAM_SPI_CS_IN
 #define CAM_SPI_CS_IN                     NRF_GPIO_PIN_MAP(0, 14)  // Listens on CAM_SPI_CS_IN
-#define CAM_PCLK_OUT_TO_MCU               NRF_GPIO_PIN_MAP(1, 2)   // CAM_PCLK (SPI CLK)
-#define CAM_D0                            NRF_GPIO_PIN_MAP(1, 3)   // CAM_D0
-#define CAM_PCLK_OUT_TO_MCU_FF            NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK (SPI CLK)
-#define CAM_D0_FF                         NRF_GPIO_PIN_MAP(0, 20) // CAM_D0
+#define CAM_PCLK_OUT_TO_MCU_DEV           NRF_GPIO_PIN_MAP(1, 2)   // CAM_PCLK (SPI CLK)
+#define CAM_D0_DEV                        NRF_GPIO_PIN_MAP(1, 3)   // CAM_D0
+#define CAM_PCLK_OUT_TO_MCU               NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK (SPI CLK)
+#define CAM_D0                            NRF_GPIO_PIN_MAP(0, 20) // CAM_D0
 #define CAM_FRAME_VALID                   NRF_GPIO_PIN_MAP(0, 29)  // Input
 #define CAM_LINE_VALID                    NRF_GPIO_PIN_MAP(0, 11)  // Input
 #define CAM_INT                           NRF_GPIO_PIN_MAP(0, 9)   // Input

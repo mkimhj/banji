@@ -12,11 +12,8 @@
 #include "nrf_cli_types.h"
 #include "nrf_cli_libuarte.h"
 #include "timers.h"
-<<<<<<< HEAD
 #include "spi.h"
-=======
 #include "pmu.h"
->>>>>>> 25a1520 (added MAX77650 library; Can set output voltages)
 
 #define CLI_EXAMPLE_LOG_QUEUE_SIZE (6)
 
@@ -326,11 +323,11 @@ NRF_CLI_CMD_REGISTER(cam, &m_sub_cam, "camera", cmd_cam);
 
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_imu)
 {
-    NRF_CLI_CMD(read accel, NULL, "readAccel", cmd_imu_readAccel),
-    NRF_CLI_CMD(read gyro, NULL, "readGyro", cmd_imu_readGyro),
+    NRF_CLI_CMD(readAccel, NULL, "readAccel", cmd_imu_readAccel),
+    NRF_CLI_CMD(readGyro, NULL, "readGyro", cmd_imu_readGyro),
     NRF_CLI_CMD(read reg, NULL, "spiBus, data, length", cmd_imu_readReg),
     NRF_CLI_CMD(set reg, NULL, "reg, val", cmd_imu_setReg),
-    NRF_CLI_CMD(read chip ID, NULL, "reg, val", cmd_imu_readChipID),
+    NRF_CLI_CMD(readchipID, NULL, "reg, val", cmd_imu_readChipID),
     NRF_CLI_SUBCMD_SET_END
 };
 NRF_CLI_CMD_REGISTER(imu, &m_sub_imu, "imu", cmd_imu);

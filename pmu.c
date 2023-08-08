@@ -14,13 +14,15 @@
 
 // Target Voltages
 #define TV_SBB0 0x1C // 1.5V
-#define TV_SBB1 0x20 // 2.8V 
-#define TV_SBB2 0x08 // 2.8V
-#define TV_LDO  0x05 // 1.5V
+#define TV_SBB1 0x00 // 2.4V  (can only go down to 2.4V)
+#define TV_SBB2 0x28 // 2.8V
+#define TV_LDO  0x74 // 2.8V
 
 // Charging Configuration
-#define CHG_CV  0x04 // 3.7V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
-#define CHG_CC  0x27 // 300 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
+#define CHG_CV    0x04  // 3.7 V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
+#define CHG_CC    0x00  // 7.5 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
+#define CHGIN_LIM 0b100 // 475 mA charge input current limit.(CNFG_CHG_B: 0x19)
+#define VSYS_REG  0x10  // 4.5V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
 
 uint8_t MAX77650_read_register(uint8_t ADDR){
     return i2cRead8(MAX77651_I2C_ADDRESS, ADDR);
@@ -984,51 +986,20 @@ void pmu_init(void){
     NRF_LOG_RAW_INFO("Checking OTP options: ");
     pmu_print_error(MAX77650_getCID() != MAX77650_CID);
 
-    // Set VCOLD JEITA Temperature Threshold to 0°C
+    // Set CHGIN Regulation Voltage 
     if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set the VCOLD JEITA Temperature Threshold to 0°C: ");
-      pmu_print_error(MAX77650_setTHM_COLD(2)); 
+      NRF_LOG_RAW_INFO("Set CHGIN regulation voltage to 4.0V: ");
+      pmu_print_error(MAX77650_setVCHGIN_MIN(0b000));
     }else{
-      MAX77650_setTHM_COLD(2);
+      MAX77650_setVCHGIN_MIN(0b000);
     }
-
-    // Set VCOOL JEITA Temperature Threshold to 15°C 
+    
+    // Set CHGIN Input Current Limit
     if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set the VCOOL JEITA Temperature Threshold to 15°C: ");
-      pmu_print_error(MAX77650_setTHM_COOL(3));
+      NRF_LOG_RAW_INFO("Set CHGIN Input Current Limit to 475 mA: ");
+      pmu_print_error(MAX77650_setICHGIN_LIM(CHGIN_LIM));
     }else{
-      MAX77650_setTHM_COOL(3);
-    }
-
-    // Set VWARM JEITA Temperature Threshold to 45°C
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set the VWARM JEITA Temperature Threshold to 45°C: ");
-      pmu_print_error(MAX77650_setTHM_WARM(2));
-    }else{
-      MAX77650_setTHM_WARM(2);
-    }
-
-    // Set VHOT JEITA Temperature Threshold to 60°C
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set the VHOT JEITA Temperature Threshold to 60°C: ");
-      pmu_print_error(MAX77650_setTHM_HOT(3));
-    }else{
-      MAX77650_setTHM_HOT(3);
-    }
-
-    /*********** Set Fast Charge regulation voltage ************/
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set CHGIN regulation voltage to 3.70V: ");
-      pmu_print_error(MAX77650_setVCHGIN_MIN(CHG_CV));
-    }else{
-      MAX77650_setVCHGIN_MIN(0);
-    }
-
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set CHGIN Input Current Limit to 95 mA: ");
-      pmu_print_error(MAX77650_setICHGIN_LIM(0));
-    }else{
-      MAX77650_setICHGIN_LIM(0);
+      MAX77650_setICHGIN_LIM(CHGIN_LIM);
     }
 
     // Set prequalification charge current to 10%
@@ -1060,7 +1031,7 @@ void pmu_init(void){
       NRF_LOG_RAW_INFO("Set Topoff timer value to 0 minutes: ");
       pmu_print_error(MAX77650_setT_TOPOFF(0b000));
     }else{
-      MAX77650_setT_TOPOFF(0);
+      MAX77650_setT_TOPOFF(0b000);
     }
 
     // Set die junction temperature regulation point to 60°C
@@ -1071,12 +1042,12 @@ void pmu_init(void){
       MAX77650_setTJ_REG(0);
     }
 
-    /********** Set System Voltage Regulation to 4.5V **********/
+    /********** Set System Voltage Regulation **********/
     if (MAX77650_debug){
       NRF_LOG_RAW_INFO("Set System voltage regulation to 4.50V: ");
-      pmu_print_error(MAX77650_setVSYS_REG(0x10));
+      pmu_print_error(MAX77650_setVSYS_REG(VSYS_REG));
     }else{
-      MAX77650_setVSYS_REG(0x10);
+      MAX77650_setVSYS_REG(VSYS_REG);
     }
 
     /********* Set Fast Charge constant current **************/
@@ -1084,7 +1055,7 @@ void pmu_init(void){
       NRF_LOG_RAW_INFO("Set the fast-charge constant current value to 7.5mA: ");
       pmu_print_error(MAX77650_setCHG_CC(CHG_CC));
     }else{
-      MAX77650_setCHG_CC(0x00);
+      MAX77650_setCHG_CC(CHG_CC);
     }
 
     // set fast charge safety timer
@@ -1093,14 +1064,6 @@ void pmu_init(void){
       pmu_print_error(MAX77650_setT_FAST_CHG(0x01));
     }else{
       MAX77650_setT_FAST_CHG(0x01);
-    }
-
-    // Set IFAST-CHG_JEITA to 7.5mA
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set IFAST-CHG_JEITA to 7.5mA: ");
-      pmu_print_error(MAX77650_setCHG_CC_JEITA(0x00));
-    }else{
-      MAX77650_setCHG_CC_JEITA(0x00);
     }
 
     // Disable Temperature monitoring
@@ -1114,20 +1077,12 @@ void pmu_init(void){
 
     /******** Set fast-charge constant voltage ************/
     if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set fast-charge battery regulation voltage to 3.7V: ");
+      NRF_LOG_RAW_INFO("Set fast-charge battery regulation voltage to");
       pmu_print_error(MAX77650_setCHG_CV(CHG_CV));
     }else{
-      MAX77650_setCHG_CV(0x04);
+      MAX77650_setCHG_CV(CHG_CV);
     }
     
-    // Set JEITA VFAST-CHG to 3.70V
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Set the modified VFAST-CHG to 3.7V: ");
-      pmu_print_error(MAX77650_setCHG_CV_JEITA(CHG_CV));
-    }else{
-      MAX77650_setCHG_CV_JEITA(0x04);
-    }
-
     // Set USB not in power down (CHGIN not suspended and can draw current from adapter)
     if (MAX77650_debug){
       NRF_LOG_RAW_INFO("Set USB not in power down: ");
@@ -1142,14 +1097,6 @@ void pmu_init(void){
       pmu_print_error(MAX77650_setIMON_DISCHG_SCALE(0x0A));
     }else{
       MAX77650_setIMON_DISCHG_SCALE(0x0A);
-    }
-
-    // Disable the analog MUX output
-    if (MAX77650_debug){
-      NRF_LOG_RAW_INFO("Disable the analog MUX output: ");
-      pmu_print_error(MAX77650_setMUX_SEL(0));
-    }else{
-      MAX77650_setMUX_SEL(0);
     }
 
     // Set the charger to Enable
@@ -1217,8 +1164,6 @@ void pmu_init(void){
     }
 
     /******* Set and Enable Output Voltages ********/
-   
-    
     // SBB0 
     if (MAX77650_debug){
       NRF_LOG_RAW_INFO("Enable SBB0 Output to 1.5V: ");
