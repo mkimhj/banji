@@ -38,6 +38,7 @@
 
 #include "nrf_nvic.h"
 #include "timers.h"
+#include "HM01B0_BLE_DEFINES.h"
 
 // Custom services
 #include "ble_cus.h"
@@ -63,12 +64,12 @@ static ble_uuid_t m_adv_uuids[] =                                               
   {CUSTOM_SERVICE_UUID, BLE_UUID_TYPE_VENDOR_BEGIN}
 };
 
-#define RING_BUFFER_SIZE 3000
+#define RING_BUFFER_SIZE TOTAL_IMAGE_SIZE
 static uint8_t ringBuffer[RING_BUFFER_SIZE] = {0};
 static uint16_t ringBufferHead = 0;
 static uint16_t ringBufferTail = 0;
 static int ringBufferBytesUsed = 0;
-static uint16_t sequenceNumber = 0;
+static uint8_t sequenceNumber = 0;
 
 char const * phy_str(ble_gap_phys_t phys)
 {
@@ -178,7 +179,7 @@ static void on_cus_evt(ble_cus_t * p_cus_service, ble_cus_evt_t * p_evt)
       break;
 
     case BLE_CUS_EVT_NOTIFICATION_DISABLED:
-      // End mic stream signal
+      // End data stream signal
       eventQueuePush(EVENT_BLE_DATA_STREAM_STOP);
       break;
 
@@ -192,9 +193,9 @@ static void on_cus_evt(ble_cus_t * p_cus_service, ble_cus_evt_t * p_evt)
 
     case BLE_CUS_EVT_TRANSFER_1KB:
     {
-      if (((p_evt->bytes_transfered_cnt / 1024) % 20) == 0) {
+      // if ((p_evt->bytes_transfered_cnt / 1024) == 0) {
         NRF_LOG_RAW_INFO("%08d [ble] sent %ukB\n", systemTimeGetMs(), (p_evt->bytes_transfered_cnt / 1024));
-      }
+      // }
       break;
     }
 
@@ -409,6 +410,10 @@ static void ble_evt_handler(ble_evt_t const * p_ble_evt, void * p_context)
       NRF_LOG_INFO("BLE_GAP_EVT_ADV_SET_TERMINATED");
       break;
 
+    case BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST:
+      NRF_LOG_INFO("BLE_GATTS_EVT_EXCHANGE_MTU_REQUEST");
+      break;
+
     default:
       NRF_LOG_INFO("BLE event not handled by app: %i", p_ble_evt->header.evt_id);
       break;
@@ -522,37 +527,66 @@ void bleInit(void)
   NRF_LOG_RAW_INFO("%02X:%02X:%02X:%02X:%02X:%02X\n", address[0], address[1], address[2], address[3], address[4], address[5]);
 }
 
+// Packet format
+// 0: Sequence Number
+// 1: Status (IMU Valid: 1, Camera Valid:1)
+// 2-3: Accel X
+// 4-5: Accel Y
+// 6-7: Accel Z
+// 8-9: Gyro X
+// 10-11: Gyro Y
+// 12-13: Gyro Z
+// 14-xxx: Camera
+static uint8_t cameraDataStartIndex = 14;
+static bool startOfFrame = true;
+
 void send(void)
 {
-  static bool sending = false;
+  bool transmitSuccess = true;
   int length = maxAttMtuBytes;
 
-  while(transmitDone && (sending == false)) {
-    sending = true;
-    if (ringBufferBytesUsed < (length - 2)) { break; }
-
-    bleCusPacket[0] = (uint8_t) (sequenceNumber >> 8) & 0xFF;
-    bleCusPacket[1] = (uint8_t) (sequenceNumber & 0xFF);
-
-    for (int i = 2; i < length; i++) {
-      bleCusPacket[i] = ringBuffer[(ringBufferHead + (i-2)) % RING_BUFFER_SIZE];
+  while(transmitSuccess && (ringBufferBytesUsed > 0)) {
+    // if (ringBufferBytesUsed < (length - cameraDataStartIndex)) { break; }
+    if (ringBufferBytesUsed < (length - cameraDataStartIndex))
+    {
+      length = ringBufferBytesUsed + cameraDataStartIndex;
     }
 
-    transmitDone = ble_cus_transmit(&m_cus, bleCusPacket, length);
+    bleCusPacket[0] = sequenceNumber;
+    bleCusPacket[1] = 0x0;
+    if (startOfFrame) {
+      bleCusPacket[1] |= 0b1;
+      startOfFrame = false;
+    }
 
-    if (transmitDone) {
-      ringBufferHead = (ringBufferHead + (length-2)) % RING_BUFFER_SIZE;
-      ringBufferBytesUsed -= (length-2);
+    // TODO: IMU Data goes here
+    // bleCusPacket[3-14] -> IMU Data
+
+    for (int i = cameraDataStartIndex; i < length; i++) {
+      bleCusPacket[i] = ringBuffer[(ringBufferHead + (i - cameraDataStartIndex)) % RING_BUFFER_SIZE];
+    }
+
+    transmitSuccess = ble_cus_transmit(&m_cus, bleCusPacket, length);
+
+    if (transmitSuccess) {
+      ringBufferHead = (ringBufferHead + (length - cameraDataStartIndex)) % RING_BUFFER_SIZE;
+      ringBufferBytesUsed -= (length - cameraDataStartIndex);
       sequenceNumber++;
+      pixelsSent += length - cameraDataStartIndex;
     }
   }
-
-  sending = false;
 }
 
-void bleSendData(uint8_t * data, int length)
+void bleSendData(uint8_t * data, uint16_t length)
 {
-  for (int i = 0; i < length; i++) {
+  if (length > RING_BUFFER_SIZE) {
+    NRF_LOG_RAW_INFO("[ble] input too large\n");
+  }
+
+  // Flag to reset image buffer on phone
+  startOfFrame = true;
+
+  for (uint16_t i = 0; i < length; i++) {
     ringBuffer[(ringBufferTail + i) % RING_BUFFER_SIZE] = data[i];
   }
 
@@ -573,7 +607,6 @@ uint32_t bleGetRingBufferBytesAvailable(void)
 
 void blePushSequenceNumber(void)
 {
-  // (sizeof(int16_t) * PDM_DECIMATION_BUFFER_LENGTH)/maxAttMtuBytes
   sequenceNumber += 3;
 }
 
@@ -590,4 +623,16 @@ uint32_t bleGetPixelsSent(void)
 ret_code_t bleDisconnect(void)
 {
   return sd_ble_gap_disconnect(m_conn_handle, BLE_HCI_REMOTE_USER_TERMINATED_CONNECTION);
+}
+
+void bleService(void) {
+  uint32_t prevPixelsSent = pixelsSent;
+  send();
+  if (pixelsSent >= TOTAL_IMAGE_SIZE) {
+    eventQueuePush(EVENT_CAMERA_READY_NEXT_FRAME);
+    pixelsSent = 0;
+  }
+  // else if (pixelsSent != prevPixelsSent) {
+  //   NRF_LOG_RAW_INFO("[ble] pixelsSent:%d\n", pixelsSent);
+  // }
 }

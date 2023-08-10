@@ -7,9 +7,12 @@
 
 #include "HM01B0_LVLD_TIMER.h"
 #include "ble_manager.h"
+#include "HM01B0_SPI.h"
+#include "HM01B0_BLE_DEFINES.h"
 #include "gpio.h"
 
-uint32_t lvld_timer_val = LVLD_TIMER_VALUE;
+#define CAM_MCLK_FREQ_MHZ 8
+#define LVLD_TIMER_VALUE (IMAGE_WIDTH + 20) * (64 / CAM_MCLK_FREQ_MHZ) * 2 // the second number in multiplication is equal to 64/cam_mclk_freq; if cam_mcl_freq=8MHz => 8
 
 const nrf_drv_timer_t TIMER_LVLD = NRF_DRV_TIMER_INSTANCE(4);
 
@@ -41,16 +44,6 @@ void timer_lvld_event_handler(nrf_timer_event_t event_type, void* p_context)
     nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
     lvld_timer_disable();
     NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
-
-    #if (CAM_FRAME_VALID_INT == 1)
-      spiSlaveSetRxDone(spiSlaveGetRxLength());
-      bleSetPixelsSent(0);
-
-      #if (defined(CAMERA_DEBUG) && (CAMERA_DEBUG == 1))
-          nrf_drv_gpiote_in_event_enable(CAM_FRAME_VALID, true);
-          spiSlaveSetBuffers();
-      #endif
-    #endif
     hm_set_capture_done();
   }
 }
@@ -64,7 +57,7 @@ void lvld_timer_init(void)
   APP_ERROR_CHECK(err_code);
 
   nrf_drv_timer_extended_compare(
-        &TIMER_LVLD, NRF_TIMER_CC_CHANNEL4, lvld_timer_val, NRF_TIMER_SHORT_COMPARE4_CLEAR_MASK, true);
+      &TIMER_LVLD, NRF_TIMER_CC_CHANNEL4, LVLD_TIMER_VALUE, NRF_TIMER_SHORT_COMPARE4_CLEAR_MASK, true);
 }
 
 /** @} */

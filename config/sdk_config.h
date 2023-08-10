@@ -3501,7 +3501,7 @@
 
 
 #ifndef NRFX_SPIS2_ENABLED
-#define NRFX_SPIS2_ENABLED 1
+#define NRFX_SPIS2_ENABLED 0
 #endif
 
 // <o> NRFX_SPIS_DEFAULT_CONFIG_IRQ_PRIORITY  - Interrupt priority
@@ -3531,6 +3531,77 @@
 
 #ifndef NRFX_SPIS_DEFAULT_ORC
 #define NRFX_SPIS_DEFAULT_ORC 255
+#endif
+
+// <e> SPIS_ENABLED - nrf_drv_spis - SPIS peripheral driver - legacy layer
+//==========================================================
+#ifndef SPIS_ENABLED
+#define SPIS_ENABLED 1
+#endif
+// <o> SPIS_DEFAULT_CONFIG_IRQ_PRIORITY  - Interrupt priority
+
+// <i> Priorities 0,2 (nRF51) and 0,1,4,5 (nRF52) are reserved for SoftDevice
+// <0=> 0 (highest)
+// <1=> 1
+// <2=> 2
+// <3=> 3
+// <4=> 4
+// <5=> 5
+// <6=> 6
+// <7=> 7
+
+#ifndef SPIS_DEFAULT_CONFIG_IRQ_PRIORITY
+#define SPIS_DEFAULT_CONFIG_IRQ_PRIORITY 6
+#endif
+
+// <o> SPIS_DEFAULT_MODE  - Mode
+
+// <0=> MODE_0
+// <1=> MODE_1
+// <2=> MODE_2
+// <3=> MODE_3
+
+#ifndef SPIS_DEFAULT_MODE
+#define SPIS_DEFAULT_MODE 0
+#endif
+
+// <o> SPIS_DEFAULT_BIT_ORDER  - SPIS default bit order
+
+// <0=> MSB first
+// <1=> LSB first
+
+#ifndef SPIS_DEFAULT_BIT_ORDER
+#define SPIS_DEFAULT_BIT_ORDER 0
+#endif
+
+// <o> SPIS_DEFAULT_DEF - SPIS default DEF character  <0-255>
+
+#ifndef SPIS_DEFAULT_DEF
+#define SPIS_DEFAULT_DEF 255
+#endif
+
+// <o> SPIS_DEFAULT_ORC - SPIS default ORC character  <0-255>
+
+#ifndef SPIS_DEFAULT_ORC
+#define SPIS_DEFAULT_ORC 255
+#endif
+
+// <q> SPIS0_ENABLED  - Enable SPIS0 instance
+
+#ifndef SPIS0_ENABLED
+#define SPIS0_ENABLED 0
+#endif
+
+// <q> SPIS1_ENABLED  - Enable SPIS1 instance
+
+#ifndef SPIS1_ENABLED
+#define SPIS1_ENABLED 0
+#endif
+
+// <q> SPIS2_ENABLED  - Enable SPIS2 instance
+
+#ifndef SPIS2_ENABLED
+#define SPIS2_ENABLED 1
 #endif
 
 // <e> NRFX_SPIS_CONFIG_LOG_ENABLED - Enables logging in the module.
