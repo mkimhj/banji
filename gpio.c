@@ -32,10 +32,10 @@ void gpioInit(void)
       NRF_GPIO_PIN_S0S1,
       NRF_GPIO_PIN_NOSENSE);
 
-  gpioOutputEnable(TRACE_PIN_1);
-  gpioOutputEnable(TRACE_PIN_2);
-  gpioWrite(TRACE_PIN_1, 0);
-  gpioWrite(TRACE_PIN_2, 0);
+  gpioOutputEnable(LED1_PIN);
+  gpioOutputEnable(LED2_PIN);
+  gpioWrite(LED1_PIN, 0);
+  gpioWrite(LED2_PIN, 0);
 }
 
 void gpioOutputEnable(gpioPin_t pin)

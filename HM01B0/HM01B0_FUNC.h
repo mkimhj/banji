@@ -14,6 +14,8 @@
 #include "HM01B0_REGISTER_MAP.h"
 
 //FUNCTIONS----------------------------------------------------------------------------------------------------------------------------//
+
+void arducam_default();
 void hm01b0_init_fixed_rom_qvga_fixed(void);
 void hm01b0_init_fixed_rom_qvga_fixed_acc(void);
 void hm01b0_init_fixed_rom_qvga_fixed_maxfps(void);

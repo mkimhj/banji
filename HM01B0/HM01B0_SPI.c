@@ -10,6 +10,7 @@
 #include "HM01B0_SPI.h"
 #include "gpio.h"
 #include "HM01B0_BLE_DEFINES.h"
+#include "event.h"
 
 #include "nrfx_spis_patch.h"
 
@@ -17,10 +18,13 @@ nrfx_spis_t spiSlaveInstance = NRF_DRV_SPIS_INSTANCE(SPI_SLAVE_BUS); /**< SPIS i
 static bool transferDone = false;
 
 static uint8_t m_tx_buf[1] = {0};                         /**< TX buffer. */
-static uint8_t m_rx_buf[total_spi_buffer_size_max];       /**< RX buffer  */
-static uint16_t m_length_rx = spi_buffer_size;            /**< Transfer length. */
-static uint16_t m_length_rx_done;                         /**< Transfer length. */
+static uint8_t m_rx_buf[TOTAL_IMAGE_SIZE];                /**< RX buffer  */
+static uint16_t m_length_rx = IMAGE_WIDTH;                /**< Transfer length. */                   /**< Transfer length. */
 static uint8_t m_length_tx = 0;                           /**< Transfer length. */
+static uint32_t bytesReceived = 0;
+static uint32_t bytesSent = 0;
+static uint32_t size_p = 0;
+static bool eventQueued = false;
 
 nrfx_spis_config_t spiSlaveConfig = {
   .miso_pin = NRFX_SPIS_PIN_NOT_USED,
@@ -35,16 +39,6 @@ nrfx_spis_config_t spiSlaveConfig = {
   .orc = NRFX_SPIS_DEFAULT_ORC,
   .irq_priority = NRFX_SPIS_DEFAULT_CONFIG_IRQ_PRIORITY,
 };
-
-void spiSlaveSetRxDone(uint16_t value)
-{
-  m_length_rx_done = value;
-}
-
-uint16_t spiSlaveGetRxDone(void)
-{
-  return m_length_rx_done;
-}
 
 uint16_t spiSlaveGetRxLength(void)
 {
@@ -61,32 +55,30 @@ bool spiSlaveGetTransferDone(void)
   return transferDone;
 }
 
-void spiSlaveEventHandler(nrfx_spis_evt_t const* p_event, void* p_context)
+void spiSlaveEventHandler(nrf_drv_spis_event_t event)
 {
-  if (p_event->evt_type == NRFX_SPIS_XFER_DONE)
+  if (event.evt_type == NRF_DRV_SPIS_XFER_DONE)
   {
-    NRF_LOG_INFO(" Transfer completed. Received: %08x",(uint32_t)m_rx_buf);
     transferDone = true;
+    bytesReceived += IMAGE_WIDTH;
   }
 }
 
 void spiSlaveSetBuffers(void)
 {
   APP_ERROR_CHECK(nrfx_spis_buffers_set(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf, m_length_rx));
+  // APP_ERROR_CHECK(nrfx_spis_buffers_set(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf, TOTAL_IMAGE_SIZE));
 }
 
 void spiSlaveSetBuffersBackWithLineCount(uint32_t lineCount)
 {
-  APP_ERROR_CHECK(nrfx_spis_buffers_set_back(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf + lineCount * m_length_rx, m_length_rx));
+  APP_ERROR_CHECK(nrfx_spis_buffers_set_back(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf + (lineCount * m_length_rx), m_length_rx));
 }
 
 void spiSlaveInit(void)
 {
-  APP_ERROR_CHECK(nrfx_spis_init(&spiSlaveInstance, &spiSlaveConfig, spiSlaveEventHandler, NULL));
+  APP_ERROR_CHECK(nrf_drv_spis_init(&spiSlaveInstance, &spiSlaveConfig, spiSlaveEventHandler));
   transferDone = false;
-  spiSlaveSetRxDone(0);
-
-  spiSlaveSetBuffers();
 }
 
 void spiSlaveDeInit(void)
@@ -94,9 +86,45 @@ void spiSlaveDeInit(void)
   nrfx_spis_uninit(&spiSlaveInstance);
 }
 
-uint16_t spiSlaveGetRxBuffer(uint8_t** rxBuffer)
+uint32_t spiSlaveGetRxBuffer(uint8_t** rxBuffer)
 {
   *rxBuffer = m_rx_buf;
-  return total_spi_buffer_size_max;
+  return TOTAL_IMAGE_SIZE;
 }
 
+uint32_t spiSlaveGetRxBufferStreaming(uint8_t** rxBuffer)
+{
+  *rxBuffer = m_rx_buf + (bytesSent % TOTAL_IMAGE_SIZE);
+  size_p = bytesReceived - bytesSent;
+
+  if (((bytesSent % TOTAL_IMAGE_SIZE) + size_p) >= TOTAL_IMAGE_SIZE)
+  {
+    // send remainder of image and then start back at the front.
+    size_p = TOTAL_IMAGE_SIZE - (bytesSent % TOTAL_IMAGE_SIZE);
+    bytesSent += TOTAL_IMAGE_SIZE - (bytesSent % TOTAL_IMAGE_SIZE);
+  }
+  else
+  {
+    bytesSent = bytesSent + size_p;
+  }
+
+  NRF_LOG_RAW_INFO("bytesSent->%d\n", bytesSent);
+
+  return size_p;
+}
+
+void spiSlaveClearByteCounters(void)
+{
+  bytesReceived = 0;
+  bytesSent = 0;
+}
+
+uint32_t spiSlaveGetBytesReceived(void)
+{
+  return bytesReceived;
+}
+
+void spiSlaveClearEventQueued(void)
+{
+  eventQueued = false;
+}
