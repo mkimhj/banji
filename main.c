@@ -41,6 +41,7 @@
 #include "event.h"
 #include "gpio.h"
 #include "accel.h"
+#include "imu.h"
 #include "spi.h"
 #include "i2c.h"
 #include "flash.h"
@@ -82,8 +83,6 @@ void powerEnterSleepMode(void)
 
   err_code = bsp_indication_set(BSP_INDICATE_IDLE);
   APP_ERROR_CHECK(err_code);
-
-  // Drive enable signals low before shutting down
 
   spiDeInit();
   delayMs(1);
@@ -182,6 +181,7 @@ static void banjiInit(void)
 
   powerInit();
 
+  imuInit();
   bleInit();
   bleAdvertisingStart();
 
