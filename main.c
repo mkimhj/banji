@@ -257,7 +257,7 @@ static void processQueue(void)
         break;
 
       case EVENT_TIMERS_ONE_SECOND_ELAPSED:
-        NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
+        //NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
         break;
 
       case EVENT_BLE_DISCONNECTED:

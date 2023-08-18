@@ -14,8 +14,8 @@
 
 // Target Voltages
 #define TV_SBB0 0x1C // 1.5V
-#define TV_SBB1 0x00 // 2.4V  (can only go down to 2.4V)
-#define TV_SBB2 0x28 // 2.8V
+#define TV_SBB1 0x20 // 2.8V  (can only go down to 2.4V)
+#define TV_SBB2 0x08 // 2.8V
 #define TV_LDO  0x74 // 2.8V
 
 // Charging Configuration

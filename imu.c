@@ -17,6 +17,7 @@
 /*! Macros to select the sensors                   */
 #define ACCEL          UINT8_C(0x00)
 #define GYRO           UINT8_C(0x01)
+#define IMU_BUFFER_SIZE 256 
 
 /******************************************************************************/
 /* Status of api are returned to this variable. */
@@ -51,7 +52,7 @@ static float gyrX = 0, gyrY = 0, gyrZ= 0;
 static struct bmi2_sens_config config;
 
 // bytes to be sent over SPI
-static uint8_t imuSPIBuffer[20];
+static uint8_t imuSPIBuffer[IMU_BUFFER_SIZE];
 
 /******************************************************************************/
 /*!           Static Function Declaration                                     */
@@ -314,8 +315,8 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *bmi)
 int8_t imuRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr){
     imuSPIBuffer[0] = reg_addr;
     memcpy(imuSPIBuffer+1, reg_data, len);
-    spiTransfer(SPI_BUS, imuSPIBuffer, len + 1);
-    memcpy(reg_data,imuSPIBuffer+1,len);
+    spiTransfer(SPI_BUS, imuSPIBuffer, (uint8_t) len + 1);
+    memcpy(reg_data, imuSPIBuffer+1, len);
     return BMI2_INTF_RET_SUCCESS;
 }
 
@@ -323,7 +324,7 @@ int8_t imuWrite(uint8_t reg_addr, const uint8_t *reg_data, uint32_t len, void *i
 
     imuSPIBuffer[0] = reg_addr;
     memcpy(imuSPIBuffer+1, reg_data, len);
-    spiTransfer(SPI_BUS,imuSPIBuffer,len+1);
+    spiTransfer(SPI_BUS, imuSPIBuffer, (uint8_t) len+1);
 
     return BMI2_INTF_RET_SUCCESS;
 }
@@ -416,7 +417,7 @@ int16_t readAccelY(void){
     rslt = bmi2_get_sensor_data(&sensor_data, &bmi);
     bmi2_print_error_code(rslt);
     if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC)){
-        return sensor_data.acc.x;
+        return sensor_data.acc.y;
     }else{
         return -1;
     }
