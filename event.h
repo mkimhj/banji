@@ -1,3 +1,6 @@
+#ifndef EVENT_H_
+#define EVENT_H_
+
 typedef enum
 {
   EVENT_NONE = 0,
@@ -23,6 +26,7 @@ typedef enum
   EVENT_CAMERA_CAPTURE_START,
   EVENT_CAMERA_CAPTURE_DONE,
   EVENT_CAMERA_READY_NEXT_FRAME,
+  EVENT_BUTTON_STATE_CHANGED,
 } event_t;
 
 void    eventQueueInit(void);
@@ -30,3 +34,5 @@ bool    eventQueueEmpty(void);
 event_t eventQueueFront(void);
 event_t eventQueuePop(void);
 void    eventQueuePush(event_t);
+
+#endif

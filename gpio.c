@@ -7,6 +7,12 @@
 #include "app_error.h"
 #include "boards.h"
 #include "gpio.h"
+#include "event.h"
+
+void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+  eventQueuePush(EVENT_BUTTON_STATE_CHANGED);
+}
 
 void gpioInit(void)
 {
@@ -36,6 +42,12 @@ void gpioInit(void)
   gpioOutputEnable(LED2_PIN);
   gpioWrite(LED1_PIN, 0);
   gpioWrite(LED2_PIN, 0);
+
+  nrf_drv_gpiote_in_config_t buttonInterruptConfig = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
+  buttonInterruptConfig.pull = NRF_GPIO_PIN_PULLUP;
+  err_code = gpioInputEnable(BUTTON_PIN, &buttonInterruptConfig, buttonInterruptHandler);
+  APP_ERROR_CHECK(err_code);
+  gpioInterruptEnable(BUTTON_PIN);
 }
 
 void gpioOutputEnable(gpioPin_t pin)

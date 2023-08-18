@@ -39,6 +39,7 @@
 #include "nrf_nvic.h"
 #include "timers.h"
 #include "HM01B0_BLE_DEFINES.h"
+#include "gpio.h"
 
 // Custom services
 #include "ble_cus.h"
@@ -529,7 +530,7 @@ void bleInit(void)
 
 // Packet format
 // 0: Sequence Number
-// 1: Status (IMU Valid: 1, Camera Valid:1)
+// 1: Status (1:Button state, 0:Camera New Frame)
 // 2-3: Accel X
 // 4-5: Accel Y
 // 6-7: Accel Z
@@ -557,6 +558,10 @@ void send(void)
     if (startOfFrame) {
       bleCusPacket[1] |= 0b1;
       startOfFrame = false;
+    }
+
+    if (gpioRead(BUTTON_PIN) == 0) {
+      bleCusPacket[1] |= 0b10;
     }
 
     // TODO: IMU Data goes here

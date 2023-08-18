@@ -2,6 +2,17 @@
 #include "nrf_gpio.h"
 #include "nrf_drv_gpiote.h"
 
+// #define FF 1
+#ifdef FF
+  #define BUTTON_PIN                      NRF_GPIO_PIN_MAP(0, 15)
+  #define CAM_PCLK_OUT_TO_MCU             NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK (SPI CLK)
+  #define CAM_D0                          NRF_GPIO_PIN_MAP(0, 20)              // CAM_D0
+#else
+  #define BUTTON_PIN                      NRF_GPIO_PIN_MAP(0, 24) // button 3 on dev board
+  #define CAM_PCLK_OUT_TO_MCU             NRF_GPIO_PIN_MAP(1, 2) // CAM_PCLK (SPI CLK)
+  #define CAM_D0                          NRF_GPIO_PIN_MAP(1, 3)              // CAM_D0
+#endif
+
 // SPI (IMU)
 #define SPI_SCK_PIN                       NRF_GPIO_PIN_MAP(0, 5)
 #define SPI_MOSI_PIN                      NRF_GPIO_PIN_MAP(0, 17)
@@ -17,9 +28,6 @@
 #define LED1_PIN                          NRF_GPIO_PIN_MAP(0, 7)                // 0 to turn on, 1 to turn off
 #define LED2_PIN                          NRF_GPIO_PIN_MAP(0, 4)                // 0 to turn on, 1 to turn off
 
-// Button
-#define BUTTON_PIN                        NRF_GPIO_PIN_MAP(0, 15)
-
 // DEBUG_UART
 #define UART_TX_PIN                       NRF_GPIO_PIN_MAP(0, 6)
 #define UART_RX_PIN                       NRF_GPIO_PIN_MAP(0, 8)
@@ -32,10 +40,6 @@
 #define CAM_POWER                         NRF_GPIO_PIN_MAP(0, 18)
 #define CAM_SPI_CS_OUT                    NRF_GPIO_PIN_MAP(0, 12)  // Goes to CAM_SPI_CS_IN
 #define CAM_SPI_CS_IN                     NRF_GPIO_PIN_MAP(0, 14)  // Listens on CAM_SPI_CS_IN
-#define CAM_PCLK_OUT_TO_MCU               NRF_GPIO_PIN_MAP(1, 2)   // CAM_PCLK (SPI CLK)
-#define CAM_D0                            NRF_GPIO_PIN_MAP(1, 3)   // CAM_D0
-#define CAM_PCLK_OUT_TO_MCU_FF            NRF_GPIO_PIN_MAP(0, 19)  // CAM_PCLK (SPI CLK)
-#define CAM_D0_FF                         NRF_GPIO_PIN_MAP(0, 20)  // CAM_D0
 #define CAM_FRAME_VALID                   NRF_GPIO_PIN_MAP(0, 29)  // Input
 #define CAM_LINE_VALID                    NRF_GPIO_PIN_MAP(0, 11)  // Input
 #define CAM_INT                           NRF_GPIO_PIN_MAP(0, 9)   // Input

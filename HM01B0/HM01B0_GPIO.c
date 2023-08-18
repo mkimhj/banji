@@ -68,7 +68,7 @@ void gpio_setting_init(void)
 {
   ret_code_t err_code;
 
-  /*Finds rising edge instead of just toggling*/
+  /*toggling*/
   nrf_drv_gpiote_in_config_t in_config_frmvld = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
   in_config_frmvld.pull = NRF_GPIO_PIN_NOPULL;
 

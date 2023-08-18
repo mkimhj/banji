@@ -175,7 +175,7 @@ static void banjiInit(void)
   NRF_LOG_RAW_INFO("Press the Tab key to see all available commands.\n");
 
   eventQueueInit();
-  buttons_leds_init(); // one of these
+  // buttons_leds_init(); // one of these
 
   i2cInit();
   spiInit();
@@ -240,6 +240,13 @@ static void processQueue(void)
       {
         NRF_LOG_RAW_INFO("%08d [cam] EVENT_CAMERA_READY_NEXT_FRAME\n", systemTimeGetMs());
         cameraReadyNextFrame();
+        break;
+      }
+
+      case EVENT_BUTTON_STATE_CHANGED:
+      {
+        // Start IMU reads here, need to latch onto something to get regular spaced reads
+        NRF_LOG_RAW_INFO("%08d [button] state changed\n", systemTimeGetMs());
         break;
       }
 
