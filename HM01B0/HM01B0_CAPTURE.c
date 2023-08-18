@@ -43,14 +43,17 @@ bool hm_get_capture_done(void)
 
 void hm_reset_capture_done(void)
 {
+  line_count = 0;
   image_rd_done = false;
 }
 
 void hm_set_capture_done(void)
 {
-  NRF_LOG_RAW_INFO("%08d [cam] IMAGE READ DONE %d\n", systemTimeGetMs(), spiSlaveGetBytesReceived());
-  image_rd_done = true;
-  eventQueuePush(EVENT_CAMERA_CAPTURE_DONE);
+  if (!image_rd_done) {
+    NRF_LOG_RAW_INFO("%08d [cam] IMAGE READ DONE %d\n", systemTimeGetMs(), spiSlaveGetBytesReceived());
+    eventQueuePush(EVENT_CAMERA_CAPTURE_DONE);
+    image_rd_done = true;
+  }
 }
 
 void hm01b0_init(void){

@@ -27,8 +27,8 @@
 //Frame timing control
 #define REG_FRAME_LENGTH_LINES_H        0x0340
 #define REG_FRAME_LENGTH_LINES_L        0x0341
-#define REG_FRAME_LENGTH_PCK_H          0x0342
-#define REG_FRAME_LENGTH_PCK_L          0x0343
+#define REG_LINE_LENGTH_PCLK_H          0x0342
+#define REG_LINE_LENGTH_PCLK_L          0x0343
 
 //Bining mode control
 
@@ -76,6 +76,9 @@
 #define REG_OUTPUT_PIN_STATUS_CONTROL   0x3065
 #define REG_ANA_REGISTER_17             0x3067
 #define REG_PCLK_POLARITY               0x3068
+
+#define REG_MAX_INTG_H                  0x2105
+#define REG_MAX_INTG_L                  0x2106
 
 
 //I2C slave registers

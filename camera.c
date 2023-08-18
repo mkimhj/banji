@@ -61,6 +61,7 @@ uint32_t cameraGetFrameBuffer(uint8_t** frame)
 void cameraReadyNextFrame(void)
 {
   spiSlaveSetBuffers();
+  spiSlaveClearByteCounters();
 
   /*Camera values initialized*/
   hm_reset_capture_done();

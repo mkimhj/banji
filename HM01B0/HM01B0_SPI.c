@@ -60,14 +60,17 @@ void spiSlaveEventHandler(nrf_drv_spis_event_t event)
   if (event.evt_type == NRF_DRV_SPIS_XFER_DONE)
   {
     transferDone = true;
-    bytesReceived += IMAGE_WIDTH;
+    // bytesReceived += IMAGE_WIDTH;
+    bytesReceived += TOTAL_IMAGE_SIZE;
+    hm_set_capture_done();
   }
 }
 
 void spiSlaveSetBuffers(void)
 {
-  APP_ERROR_CHECK(nrfx_spis_buffers_set(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf, m_length_rx));
-  // APP_ERROR_CHECK(nrfx_spis_buffers_set(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf, TOTAL_IMAGE_SIZE));
+  memset(m_rx_buf, 0, TOTAL_IMAGE_SIZE);
+  // APP_ERROR_CHECK(nrfx_spis_buffers_set(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf, m_length_rx));
+  APP_ERROR_CHECK(nrfx_spis_buffers_set(&spiSlaveInstance, m_tx_buf, m_length_tx, m_rx_buf, TOTAL_IMAGE_SIZE));
 }
 
 void spiSlaveSetBuffersBackWithLineCount(uint32_t lineCount)
