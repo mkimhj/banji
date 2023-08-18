@@ -59,7 +59,7 @@ void SYSTEM_TIMER_IRQHandler(void)
   if(SYSTEM_TIMER->EVENTS_COMPARE[0]) {
     SYSTEM_TIMER->EVENTS_COMPARE[0] = 0;
     systemTimeSeconds++;
-    // eventQueuePush(EVENT_TIMERS_ONE_SECOND_ELAPSED);
+    //eventQueuePush(EVENT_TIMERS_ONE_SECOND_ELAPSED);
   }
 }
 

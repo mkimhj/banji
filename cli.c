@@ -13,6 +13,7 @@
 #include "nrf_cli_libuarte.h"
 #include "timers.h"
 #include "spi.h"
+#include "pmu.h"
 
 #define CLI_EXAMPLE_LOG_QUEUE_SIZE (6)
 
@@ -201,6 +202,85 @@ static void cmd_imu(nrf_cli_t const *p_cli, size_t argc, char **argv)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+// PMU COMMANDS
+
+static void cmd_pmu_init(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  pmu_init();
+}
+
+static void cmd_pmu_read_reg(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  uint8_t regAddr = (uint8_t)strtol(argv[1], NULL, 16);
+  uint8_t regVal = MAX77650_read_register(regAddr);
+  NRF_LOG_RAW_INFO("reg 0x%x = 0x%x\n", regAddr, regVal);
+}
+
+static void cmd_pmu_write_reg(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  uint8_t regAddr = (uint8_t)strtol(argv[1], NULL, 16);
+  uint8_t regVal = (uint8_t)strtol(argv[2], NULL, 16);
+  NRF_LOG_RAW_INFO("reg 0x%x = 0x%x\n", regAddr, regVal);
+  MAX77650_write_register(regAddr, regVal);
+
+}
+
+static void cmd_pmu_setVoltages(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+
+  MAX77650_setIP_SBB0(0b11);  //Limit output of SBB0 to 500mA
+  MAX77650_setTV_SBB0(0b101000); //Set output Voltage of SBB0 to 1.8V
+  MAX77650_setADE_SBB0(0b0); //Disable Active Discharge at SBB0 Output
+  MAX77650_setEN_SBB0(0b110); //Enable SBB0 is on irrespective of FPS whenever the on/off controller is in its "On via Software" or "On via On/Off Controller" states
+
+  MAX77650_setIP_SBB1(0b11);  //Limit output of SBB1 to 500mA
+  MAX77650_setTV_SBB1(0b100000); //Set output Voltage of SBB1 to 1.2V
+  MAX77650_setADE_SBB1(0b0); //Disable Active Discharge at SBB1 Output
+  MAX77650_setEN_SBB1(0b110); //Enable SBB1 is on irrespective of FPS whenever the on/off controller is in its "On via Software" or "On via On/Off Controller" states
+
+  MAX77650_setIP_SBB2(0b11);  //Limit output of SBB2 to 500mA
+  MAX77650_setTV_SBB2(0b110010); //Set output Voltage of SBB2 to 3.3V
+  MAX77650_setADE_SBB2(0b0); //Disable Active Discharge at SBB2 Output
+  MAX77650_setEN_SBB2(0b110); //Enable SBB2 is on irrespective of FPS whenever the on/off controller is in its "On via Software" or "On via On/Off Controller" states
+
+  MAX77650_setTV_LDO(0x24); //Set output Voltage of LDO to 1.8V
+  MAX77650_setEN_LDO(true);
+
+  NRF_LOG_RAW_INFO("SIMO Buck-Boost Voltage Channel 0: ");
+  NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_SBB0() * 0.025 + 0.8));
+
+  NRF_LOG_RAW_INFO("SIMO Buck-Boost Voltage Channel 2: ");
+  if (!(MAX77650_getDIDM())){
+    NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_SBB2() * 0.05 + 0.8));
+  }
+  else{
+    NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_SBB2() * 0.05 + 2.4));
+  }
+
+
+}
+
+
+static void cmd_pmu(nrf_cli_t const *p_cli, size_t argc, char **argv)
+{
+  ASSERT(p_cli);
+  ASSERT(p_cli->p_ctx && p_cli->p_iface && p_cli->p_name);
+
+  if ((argc == 1) || nrf_cli_help_requested(p_cli))
+  {
+    nrf_cli_help_print(p_cli, NULL, 0);
+    return;
+  }
+
+  if (argc != 2)
+  {
+    nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: bad parameter count\n", argv[0]);
+    return;
+  }
+
+  nrf_cli_fprintf(p_cli, NRF_CLI_ERROR, "%s: unknown parameter: %s\n", argv[0], argv[1]);
+}
+////////////////////////////////////////////////////////////////////////////////
 void cliInit(void)
 {
   ret_code_t ret;
@@ -243,12 +323,22 @@ NRF_CLI_CMD_REGISTER(cam, &m_sub_cam, "camera", cmd_cam);
 
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_imu)
 {
-    NRF_CLI_CMD(read accel, NULL, "readAccel", cmd_imu_readAccel),
-    NRF_CLI_CMD(read gyro, NULL, "readGyro", cmd_imu_readGyro),
+    NRF_CLI_CMD(readAccel, NULL, "readAccel", cmd_imu_readAccel),
+    NRF_CLI_CMD(readGyro, NULL, "readGyro", cmd_imu_readGyro),
     NRF_CLI_CMD(read reg, NULL, "spiBus, data, length", cmd_imu_readReg),
     NRF_CLI_CMD(set reg, NULL, "reg, val", cmd_imu_setReg),
-    NRF_CLI_CMD(read chip ID, NULL, "reg, val", cmd_imu_readChipID),
+    NRF_CLI_CMD(readchipID, NULL, "reg, val", cmd_imu_readChipID),
     NRF_CLI_SUBCMD_SET_END
 };
 NRF_CLI_CMD_REGISTER(imu, &m_sub_imu, "imu", cmd_imu);
+
+
+NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_pmu){
+    NRF_CLI_CMD(init, NULL, "Print all entered parameters.", cmd_pmu_init),
+    NRF_CLI_CMD(read, NULL, "read register (hex) from pmu", cmd_pmu_read_reg),
+    NRF_CLI_CMD(write, NULL, "write register (hex) from pmu", cmd_pmu_write_reg),
+    NRF_CLI_CMD(setVoltage, NULL, "set Voltage", cmd_pmu_setVoltages),
+    NRF_CLI_SUBCMD_SET_END};
+
+NRF_CLI_CMD_REGISTER(pmu, &m_sub_pmu, "pmu", cmd_pmu);
 

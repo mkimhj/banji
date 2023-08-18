@@ -22,7 +22,7 @@
 static const nrfx_spim_t spiInstance = NRFX_SPIM_INSTANCE(SPI_BUS);
 
 static volatile bool transferDone;
-static uint8_t spiRxBuffer[10];
+static uint8_t spiRxBuffer[256];
 
 nrfx_spim_config_t spiConfig = {
   .sck_pin        = SPI_SCK_PIN,

@@ -48,7 +48,7 @@
 #include "cli.h"
 #include "camera.h"
 #include "main.h"
-
+#include "pmu.h"
 #include "boards.h"
 #include "nrf_ppi.h"
 #include "nrf_timer.h"
@@ -64,6 +64,7 @@ static bool streaming = false;
 
 static uint8_t metadataIndex = 0;
 static uint8_t metadata[180] = { 0 };
+
 
 void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 {
@@ -147,6 +148,7 @@ static void powerInit(void)
   ret_code_t err_code;
   err_code = nrf_pwr_mgmt_init();
   APP_ERROR_CHECK(err_code);
+  pmu_init();
   sd_power_dcdc_mode_set(true);
 }
 
@@ -252,6 +254,10 @@ static void processQueue(void)
 
       case EVENT_BLE_IDLE:
         // powerEnterSleepMode();
+        break;
+
+      case EVENT_TIMERS_ONE_SECOND_ELAPSED:
+        //NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
         break;
 
       case EVENT_BLE_DISCONNECTED:
