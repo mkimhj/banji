@@ -39,8 +39,16 @@ NRFX_SPIS:4
 */
 //+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
 
-#define IMAGE_WIDTH 240
-#define IMAGE_HEIGHT 240
-#define TOTAL_IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)
+#define QQVGA 1
+
+#ifdef QQVGA
+  #define IMAGE_WIDTH 162
+  #define IMAGE_HEIGHT 119
+  #define TOTAL_IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)
+#else
+  #define IMAGE_WIDTH 240
+  #define IMAGE_HEIGHT 240
+  #define TOTAL_IMAGE_SIZE (IMAGE_WIDTH * IMAGE_HEIGHT)
+#endif
 
 #endif /* HM01B0_BLE_DEFINES_H_ */

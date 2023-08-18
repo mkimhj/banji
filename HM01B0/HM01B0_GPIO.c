@@ -7,6 +7,7 @@
 #include "HM01B0_GPIO.h"
 #include "gpio.h"
 #include "ble_manager.h"
+#include "timers.h"
 
 void in_pin_handler_CAM_LINE_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
@@ -23,16 +24,38 @@ void in_pin_handler_CAM_LINE_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity
     nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
     lvld_timer_disable();
     NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
+    NRF_LOG_RAW_INFO("%d lvld pin done\n", systemTimeGetMs());
     hm_set_capture_done();
   }
 }
 
 void in_pin_handler_CAM_FRAME_VALID(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
-  nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
-  nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
-  line_count = 0;
-  lvld_timer_enable();
+  static bool start = true;
+
+  if (gpioRead(CAM_FRAME_VALID) && start) {
+    // nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
+    lvld_timer_enable();
+    start = false;
+    nrf_drv_gpiote_in_event_disable(CAM_LINE_VALID);
+    NRF_LOG_RAW_INFO("%08d image start\n", systemTimeGetMs());
+  } else if (gpioRead(CAM_FRAME_VALID) == 0 && !start) {
+    NRF_GPIO->OUTSET = 1UL << CAM_SPI_CS_OUT;
+    nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
+    start = true;
+    NRF_LOG_RAW_INFO("%08d image end\n", systemTimeGetMs());
+  }
+
+  // if (line_count > 0) {
+
+  // } else {
+  //   nrf_gpio_pin_clear(CAM_SPI_CS_OUT);
+  //   // nrf_drv_gpiote_in_event_disable(CAM_FRAME_VALID);
+  //   line_count = 0;
+  //   lvld_timer_enable();
+  // }
+
+  // NRF_LOG_RAW_INFO("%d frame valid\n", systemTimeGetMs());
 }
 
 void gpio_setting_uninit(void)
@@ -46,7 +69,7 @@ void gpio_setting_init(void)
   ret_code_t err_code;
 
   /*Finds rising edge instead of just toggling*/
-  nrf_drv_gpiote_in_config_t in_config_frmvld = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
+  nrf_drv_gpiote_in_config_t in_config_frmvld = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
   in_config_frmvld.pull = NRF_GPIO_PIN_NOPULL;
 
   err_code = nrf_drv_gpiote_in_init(CAM_FRAME_VALID, &in_config_frmvld, in_pin_handler_CAM_FRAME_VALID);

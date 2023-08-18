@@ -17,9 +17,5 @@
 
 void arducam_default();
 void hm01b0_init_fixed_rom_qvga_fixed(void);
-void hm01b0_init_fixed_rom_qvga_fixed_acc(void);
-void hm01b0_init_fixed_rom_qvga_fixed_maxfps(void);
-void hm01b0_init_brighter(void);
-void hm01b0_init_datasheet_default(void);
 
 #endif /* HM01B0_FUNC_H_ */
