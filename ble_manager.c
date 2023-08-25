@@ -40,6 +40,7 @@
 #include "timers.h"
 #include "HM01B0_BLE_DEFINES.h"
 #include "gpio.h"
+#include "imu.h"
 
 // Custom services
 #include "ble_cus.h"
@@ -564,8 +565,26 @@ void send(void)
       bleCusPacket[1] |= 0b10;
     }
 
-    // TODO: IMU Data goes here
-    // bleCusPacket[3-14] -> IMU Data
+    int16_t accelX = readAccelX();
+    int16_t accelY = readAccelY();
+    int16_t accelZ = readAccelZ();
+    int16_t gyroX = readGyroX();
+    int16_t gyroY = readGyroY();
+    int16_t gyroZ = readGyroZ();
+
+    bleCusPacket[2] = accelX & 0xFF; 
+    bleCusPacket[3] = (accelX >> 8) & 0xFF; 
+    bleCusPacket[4] = accelY & 0xFF; 
+    bleCusPacket[5] = (accelY >> 8) & 0xFF; 
+    bleCusPacket[6] = accelZ & 0xFF; 
+    bleCusPacket[7] = (accelZ >> 8) & 0xFF; 
+
+    bleCusPacket[8] = gyroX & 0xFF; 
+    bleCusPacket[9] = (gyroX >> 8) & 0xFF; 
+    bleCusPacket[10] = gyroY & 0xFF; 
+    bleCusPacket[11] = (gyroY >> 8) & 0xFF; 
+    bleCusPacket[12] = gyroZ & 0xFF; 
+    bleCusPacket[13] = (gyroZ >> 8) & 0xFF; 
 
     for (int i = cameraDataStartIndex; i < length; i++) {
       bleCusPacket[i] = ringBuffer[(ringBufferHead + (i - cameraDataStartIndex)) % RING_BUFFER_SIZE];

@@ -254,7 +254,7 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *bmi)
     {
         /* NOTE: The user can change the following configuration parameters according to their requirement. */
         /* Set Output Data Rate */
-        config[ACCEL].cfg.acc.odr = BMI2_ACC_ODR_200HZ;
+        config[ACCEL].cfg.acc.odr = BMI2_ACC_ODR_1600HZ;
 
         /* Gravity range of the sensor (+/- 2G, 4G, 8G, 16G). */
         config[ACCEL].cfg.acc.range = BMI2_ACC_RANGE_2G;
@@ -279,7 +279,7 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *bmi)
 
         /* The user can change the following configuration parameters according to their requirement. */
         /* Set Output Data Rate */
-        config[GYRO].cfg.gyr.odr = BMI2_GYR_ODR_200HZ;
+        config[GYRO].cfg.gyr.odr = BMI2_GYR_ODR_1600HZ;
 
         /* Gyroscope Angular Rate Measurement Range.By default the range is 2000dps. */
         config[GYRO].cfg.gyr.range = BMI2_GYR_RANGE_2000;

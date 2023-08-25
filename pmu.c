@@ -19,7 +19,7 @@
 #define TV_LDO  0x74 // 2.8V
 
 // Charging Configuration
-#define CHG_CV    0x04  // 3.7 V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
+#define CHG_CV    0x18  // 4.2 V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
 #define CHG_CC    0x00  // 7.5 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
 #define CHGIN_LIM 0b100 // 475 mA charge input current limit.(CNFG_CHG_B: 0x19)
 #define VSYS_REG  0x10  // 4.5V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
