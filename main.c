@@ -82,15 +82,16 @@ void powerEnterSleepMode(void)
 
   NRF_LOG_RAW_INFO("%08d [power] powering off...\n", systemTimeGetMs());
 
-  err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-  APP_ERROR_CHECK(err_code);
+  // err_code = bsp_indication_set(BSP_INDICATE_IDLE);
+  // APP_ERROR_CHECK(err_code);
 
   spiDeInit();
   delayMs(1);
 
   // Prepare wakeup buttons.
-  err_code = bsp_btn_ble_sleep_mode_prepare();
-  APP_ERROR_CHECK(err_code);
+  // err_code = bsp_btn_ble_sleep_mode_prepare();
+  // APP_ERROR_CHECK(err_code);
+  nrf_gpio_cfg_sense_set(BUTTON_PIN, NRF_GPIO_PIN_SENSE_LOW);
 
   // Go to system-off mode (this function will not return; wakeup will cause a reset).
   err_code = sd_power_system_off();
@@ -246,7 +247,26 @@ static void processQueue(void)
       case EVENT_BUTTON_STATE_CHANGED:
       {
         // Start IMU reads here, need to latch onto something to get regular spaced reads
-        NRF_LOG_RAW_INFO("%08d [button] state changed\n", systemTimeGetMs());
+        static uint32_t lastPressedTimeMs;
+        static uint8_t buttonPressedCounter = 0;
+        uint32_t currentTimeMs = systemTimeGetMs();
+        bool pressed = buttonPressed();
+
+        NRF_LOG_RAW_INFO("%08d [button] pressed:%d resetCounter:%d\n", currentTimeMs, pressed, buttonPressedCounter);
+
+        if (pressed) {
+          if ((currentTimeMs - lastPressedTimeMs) > 400) {
+            buttonPressedCounter = 0;
+          }
+
+          lastPressedTimeMs = currentTimeMs;
+          ++buttonPressedCounter;
+        } else if (buttonPressedCounter >= 5) {
+          NRF_LOG_RAW_INFO("%08d [main] trigger power down\n", systemTimeGetMs());
+          buttonPressedCounter = 0; // reset this for debug
+          eventQueuePush(EVENT_POWER_ENTER_SLEEP_MODE);
+        }
+
         break;
       }
 
@@ -269,6 +289,10 @@ static void processQueue(void)
 
       case EVENT_BLE_DISCONNECTED:
         NVIC_SystemReset();
+        break;
+
+      case EVENT_POWER_ENTER_SLEEP_MODE:
+        powerEnterSleepMode();
         break;
 
       default:

@@ -14,6 +14,11 @@ void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t acti
   eventQueuePush(EVENT_BUTTON_STATE_CHANGED);
 }
 
+bool buttonPressed(void)
+{
+  return (gpioRead(BUTTON_PIN) == 0);
+}
+
 void gpioInit(void)
 {
   ret_code_t err_code;

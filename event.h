@@ -27,6 +27,7 @@ typedef enum
   EVENT_CAMERA_CAPTURE_DONE,
   EVENT_CAMERA_READY_NEXT_FRAME,
   EVENT_BUTTON_STATE_CHANGED,
+  EVENT_POWER_ENTER_SLEEP_MODE,
 } event_t;
 
 void    eventQueueInit(void);

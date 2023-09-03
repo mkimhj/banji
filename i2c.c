@@ -132,6 +132,31 @@ void i2cScan(void)
   }
 }
 
+bool i2cScanForPmu(void)
+{
+  ret_code_t err_code;
+  uint8_t sample_data;
+  bool detected_device = false;
+  for (uint8_t address = 0x40; address <= 0x48; address++)
+  {
+    resetFlags();
+    err_code = nrf_drv_twi_rx(&i2cHandle, address, &sample_data, sizeof(sample_data));
+    APP_ERROR_CHECK(err_code);
+    while (callbackReceived == false)
+    {
+      __WFE();
+    };
+
+    if (transferDone)
+    {
+      detected_device = true;
+      NRF_LOG_INFO("TWI device detected at address 0x%x.", address);
+    }
+  }
+
+  return detected_device;
+}
+
 // 8bit registers
 void i2cWrite8(uint8_t addr, uint8_t reg, uint8_t data)
 {

@@ -17,7 +17,7 @@
 /*! Macros to select the sensors                   */
 #define ACCEL          UINT8_C(0x00)
 #define GYRO           UINT8_C(0x01)
-#define IMU_BUFFER_SIZE 256 
+#define IMU_BUFFER_SIZE 256
 
 /******************************************************************************/
 /* Status of api are returned to this variable. */
@@ -33,9 +33,9 @@ static uint8_t sensor_list[2] = {BMI2_ACCEL, BMI2_GYRO};
 // replaces bmi2_interface_init
 static struct bmi2_dev bmi = {
      // Set SPI interface parameters
-     .chip_id = BMI270_CHIP_ID, 
+     .chip_id = BMI270_CHIP_ID,
      .dummy_byte = 1,
-     .read_write_len = 8, 
+     .read_write_len = 8,
      .intf = BMI2_SPI_INTF,
      .read = imuRead,
      .write = imuWrite,
@@ -90,139 +90,137 @@ static void bmi2_print_error_code(int8_t rslt)
     switch (rslt)
     {
         case BMI2_OK:
-
             /* Do nothing */
             break;
 
         case BMI2_W_FIFO_EMPTY:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d FIFO empty\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d FIFO empty\r\n", systemTimeGetMs(), rslt);
             break;
         case BMI2_W_PARTIAL_READ:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d FIFO partial read\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d FIFO partial read\r\n", systemTimeGetMs(), rslt);
             break;
         case BMI2_E_NULL_PTR:
-           NRF_LOG_RAW_INFO("[imu] error_code:%d Null pointer error. It occurs when the user tries to assign value (not address) to a pointer, which has been initialized to NULL.\r\n", rslt);
+           NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Null pointer error. It occurs when the user tries to assign value (not address) to a pointer, which has been initialized to NULL.\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_COM_FAIL:
-           NRF_LOG_RAW_INFO("[imu] error_code:%d Communication failure error. It occurs due to read/write operation failure and also due to power failure during communication\r\n",rslt);
+           NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Communication failure error. It occurs due to read/write operation failure and also due to power failure during communication\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_DEV_NOT_FOUND:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Device not found error. It occurs when the device chip id is incorrectly read\r\n",
-                   rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Device not found error.\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_INVALID_SENSOR:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid sensor error. It occurs when there is a mismatch in the requested feature with the available one\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid sensor error. It occurs when there is a mismatch in the requested feature with the available one\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_SELF_TEST_FAIL:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Self-test failed error. It occurs when the validation of accel self-test data is not satisfied\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Self-test failed error. It occurs when the validation of accel self-test data is not satisfied\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_INVALID_INT_PIN:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid interrupt pin error. It occurs when the user tries to configure interrupt pins apart from INT1 and INT2\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid interrupt pin error. It occurs when the user tries to configure interrupt pins apart from INT1 and INT2\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_OUT_OF_RANGE:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Out of range error. It occurs when the data exceeds from filtered or unfiltered data from fifo and also when the range exceeds the maximum range for accel and gyro while performing FOC\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Out of range error. It occurs when the data exceeds from filtered or unfiltered data from fifo and also when the range exceeds the maximum range for accel and gyro while performing FOC\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_ACC_INVALID_CFG:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid Accel configuration error. It occurs when there is an error in accel configuration register which could be one among range, BW or filter performance in reg address 0x40\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid Accel configuration error. It occurs when there is an error in accel configuration register which could be one among range, BW or filter performance in reg address 0x40\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_GYRO_INVALID_CFG:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Error: Invalid Gyro configuration error. It occurs when there is a error in gyro configuration register which could be one among range, BW or filter performance in reg address 0x42\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Error: Invalid Gyro configuration error. It occurs when there is a error in gyro configuration register which could be one among range, BW or filter performance in reg address 0x42\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_ACC_GYR_INVALID_CFG:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid Accel-Gyro configuration error. It occurs when there is a error in accel and gyro configuration registers which could be one among range, BW or filter performance in reg address 0x40 and 0x42\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid Accel-Gyro configuration error. It occurs when there is a error in accel and gyro configuration registers which could be one among range, BW or filter performance in reg address 0x40 and 0x42\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_CONFIG_LOAD:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Configuration load error. It occurs when failure observed while loading the configuration into the sensor\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Configuration load error. It occurs when failure observed while loading the configuration into the sensor\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_INVALID_PAGE:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid page error. It occurs due to failure in writing the correct feature configuration from selected page\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid page error. It occurs due to failure in writing the correct feature configuration from selected page\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_SET_APS_FAIL:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d APS failure error. It occurs due to failure in write of advance power mode configuration register\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d APS failure error. It occurs due to failure in write of advance power mode configuration register\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_AUX_INVALID_CFG:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid AUX configuration error. It occurs when the auxiliary interface settings are not enabled properly\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid AUX configuration error. It occurs when the auxiliary interface settings are not enabled properly\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_AUX_BUSY:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d AUX busy error. It occurs when the auxiliary interface buses are engaged while configuring the AUX\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d AUX busy error. It occurs when the auxiliary interface buses are engaged while configuring the AUX\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_REMAP_ERROR:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Remap error. It occurs due to failure in assigning the remap axes data for all the axes after change in axis position\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Remap error. It occurs due to failure in assigning the remap axes data for all the axes after change in axis position\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_GYR_USER_GAIN_UPD_FAIL:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Gyro user gain update fail error. It occurs when the reading of user gain update status fails\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Gyro user gain update fail error. It occurs when the reading of user gain update status fails\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_SELF_TEST_NOT_DONE:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Self-test not done error. It occurs when the self-test process is ongoing or not completed\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Self-test not done error. It occurs when the self-test process is ongoing or not completed\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_INVALID_INPUT:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid input error. It occurs when the sensor input validity fails\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid input error. It occurs when the sensor input validity fails\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_INVALID_STATUS:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Invalid status error. It occurs when the feature/sensor validity fails\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Invalid status error. It occurs when the feature/sensor validity fails\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_CRT_ERROR:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d CRT error. It occurs when the CRT test has failed\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d CRT error. It occurs when the CRT test has failed\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_ST_ALREADY_RUNNING:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Self-test already running error. It occurs when the self-test is already running and another has been initiated\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Self-test already running error. It occurs when the self-test is already running and another has been initiated\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_CRT_READY_FOR_DL_FAIL_ABORT:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d CRT ready for download fail abort error. It occurs when download in CRT fails due to wrong address location\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d CRT ready for download fail abort error. It occurs when download in CRT fails due to wrong address location\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_DL_ERROR:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Download error. It occurs when write length exceeds that of the maximum burst length\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Download error. It occurs when write length exceeds that of the maximum burst length\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_PRECON_ERROR:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Pre-conditional error. It occurs when precondition to start the feature was not completed\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Pre-conditional error. It occurs when precondition to start the feature was not completed\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_ABORT_ERROR:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Abort error. It occurs when the device was shaken during CRT test\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Abort error. It occurs when the device was shaken during CRT test\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_WRITE_CYCLE_ONGOING:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Write cycle ongoing error. It occurs when the write cycle is already running and another has been initiated\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Write cycle ongoing error. It occurs when the write cycle is already running and another has been initiated\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_ST_NOT_RUNING:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Self-test is not running error. It occurs when self-test running is disabled while it's running\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Self-test is not running error. It occurs when self-test running is disabled while it's running\n", systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_DATA_RDY_INT_FAILED:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Data ready interrupt error. It occurs when the sample count exceeds the FOC sample limit and data ready status is not updated\r\n",rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Data ready interrupt error. It occurs when the sample count exceeds the FOC sample limit and data ready status is not updated\n",systemTimeGetMs(), rslt);
             break;
 
         case BMI2_E_INVALID_FOC_POSITION:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Error: Invalid FOC position error. It occurs when average FOC data is obtained for the wrong axes\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Error: Invalid FOC position error. It occurs when average FOC data is obtained for the wrong axes\n", systemTimeGetMs(), rslt);
             break;
 
         default:
-            NRF_LOG_RAW_INFO("[imu] error_code:%d Unknown error code\r\n", rslt);
+            NRF_LOG_RAW_INFO("%08d [imu] error_code:%d Unknown error code\n", systemTimeGetMs(), rslt);
             break;
     }
 }
@@ -343,7 +341,7 @@ void imuInit(void)
 
     if(rslt == BMI2_OK)
     {
-        // Accel configuration settings. 
+        // Accel configuration settings.
         rslt = set_accel_gyro_config(&bmi);
         bmi2_print_error_code(rslt);
 
@@ -351,17 +349,17 @@ void imuInit(void)
         rslt = bmi2_sensor_enable(sensor_list, 2, &bmi);
         bmi2_print_error_code(rslt);
 
-        NRF_LOG_RAW_INFO("IMU initialization successful\n")
+        NRF_LOG_RAW_INFO("%08d [imu] initialization successful\n", systemTimeGetMs());
     }
     else{
-        NRF_LOG_RAW_INFO("IMU initialization failed\n")
+        NRF_LOG_RAW_INFO("%08d [imu] initialization failed\n", systemTimeGetMs());
     }
 }
 
 void imuReadAccel(void){
 
     config.type = BMI2_ACCEL;
-    // Get the accel configurations. 
+    // Get the accel configurations.
     rslt = bmi2_get_sensor_config(&config, 1, &bmi);
     bmi2_print_error_code(rslt);
 
@@ -382,7 +380,7 @@ void imuReadAccel(void){
 }
 
 void imuReadGyro(void){
-    
+
     config.type = BMI2_GYRO;
     /* Get the accel configurations. */
     rslt = bmi2_get_sensor_config(&config, 1, &bmi);

@@ -63,3 +63,4 @@ void gpioInit(void);
 void gpioOutputEnable(gpioPin_t pin);
 void gpioDisable(gpioPin_t pin);
 void gpioWrite(gpioPin_t pin, uint8_t value);
+bool buttonPressed(void);
