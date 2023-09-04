@@ -33,6 +33,11 @@
 #define SEC_PARAM_MIN_KEY_SIZE          7                                       /**< Minimum encryption key size. */
 #define SEC_PARAM_MAX_KEY_SIZE          16                                      /**< Maximum encryption key size. */
 
+// IMU
+#define IMU_FREQUENCY_HZ 50
+#define IMU_INTERVAL_MS (1000/IMU_FREQUENCY_HZ)
+#define IMU_TICKS APP_TIMER_TICKS(IMU_INTERVAL_MS)
+
 // Flash Configuration
 #define FLASH_READ_BUFFER_SIZE 512
 

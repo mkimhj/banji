@@ -54,8 +54,9 @@
 #include "nrf_timer.h"
 #include "HM01B0_BLE_DEFINES.h"
 
-APP_TIMER_DEF(resetTimer);
+APP_TIMER_DEF(imuTimer);
 
+static uint8_t imuBuffer[12] = {0};
 static bool bleRetry = false;
 static bool bleDataStreamRequested = false;
 static uint32_t expectedBufferCount = 0;
@@ -71,9 +72,9 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
   app_error_handler(DEAD_BEEF, line_num, p_file_name);
 }
 
-static void resetTimerCallback(void * p_context)
+static void imuTimerCallback(void * p_context)
 {
-  NVIC_SystemReset();
+  eventQueuePush(EVENT_IMU_SAMPLE_DATA);
 }
 
 void powerEnterSleepMode(void)
@@ -168,7 +169,7 @@ static void banjiInit(void)
 
   timersInit();
   ret_code_t err_code;
-  err_code = app_timer_create(&resetTimer, APP_TIMER_MODE_SINGLE_SHOT, resetTimerCallback);
+  err_code = app_timer_create(&imuTimer, APP_TIMER_MODE_REPEATED, imuTimerCallback);
   APP_ERROR_CHECK(err_code);
 
   cliInit();
@@ -185,6 +186,7 @@ static void banjiInit(void)
   powerInit();
 
   imuInit();
+  imuSetupInterrupt();
   bleInit();
   bleAdvertisingStart();
 
@@ -261,10 +263,17 @@ static void processQueue(void)
 
           lastPressedTimeMs = currentTimeMs;
           ++buttonPressedCounter;
+          bleImuResetBuffer();
+          imuEnable();
+          // app_timer_start(imuTimer, IMU_TICKS, imuTimerCallback);
         } else if (buttonPressedCounter >= 5) {
           NRF_LOG_RAW_INFO("%08d [main] trigger power down\n", systemTimeGetMs());
           buttonPressedCounter = 0; // reset this for debug
           eventQueuePush(EVENT_POWER_ENTER_SLEEP_MODE);
+        } else {
+          // button released
+          // app_timer_stop(imuTimer);
+          imuDisable();
         }
 
         break;
@@ -284,8 +293,22 @@ static void processQueue(void)
         break;
 
       case EVENT_TIMERS_ONE_SECOND_ELAPSED:
-        //NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
+      {
+        // NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
+        static bool ledOn = false;
+        gpioWrite(LED2_PIN, ledOn);
+        ledOn = !ledOn;
         break;
+      }
+
+      case EVENT_IMU_SAMPLE_DATA:
+      {
+        uint8_t *imuData;
+        if (imuReadData(&imuData)) {
+          bleImuSendData(imuData, 12);
+        }
+        break;
+      }
 
       case EVENT_BLE_DISCONNECTED:
         NVIC_SystemReset();

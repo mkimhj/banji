@@ -50,6 +50,7 @@ static uint8_t indx = 0;
 static float accX = 0, accY = 0, accZ = 0;
 static float gyrX = 0, gyrY = 0, gyrZ= 0;
 static struct bmi2_sens_config config;
+static uint8_t imuData[12];
 
 // bytes to be sent over SPI
 static uint8_t imuSPIBuffer[IMU_BUFFER_SIZE];
@@ -252,7 +253,7 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *bmi)
     {
         /* NOTE: The user can change the following configuration parameters according to their requirement. */
         /* Set Output Data Rate */
-        config[ACCEL].cfg.acc.odr = BMI2_ACC_ODR_1600HZ;
+        config[ACCEL].cfg.acc.odr = BMI2_ACC_ODR_50HZ;
 
         /* Gravity range of the sensor (+/- 2G, 4G, 8G, 16G). */
         config[ACCEL].cfg.acc.range = BMI2_ACC_RANGE_2G;
@@ -277,7 +278,7 @@ static int8_t set_accel_gyro_config(struct bmi2_dev *bmi)
 
         /* The user can change the following configuration parameters according to their requirement. */
         /* Set Output Data Rate */
-        config[GYRO].cfg.gyr.odr = BMI2_GYR_ODR_1600HZ;
+        config[GYRO].cfg.gyr.odr = BMI2_GYR_ODR_50HZ;
 
         /* Gyroscope Angular Rate Measurement Range.By default the range is 2000dps. */
         config[GYRO].cfg.gyr.range = BMI2_GYR_RANGE_2000;
@@ -356,6 +357,18 @@ void imuInit(void)
     }
 }
 
+void imuEnable(void)
+{
+  rslt = bmi2_sensor_enable(sensor_list, 2, &bmi);
+  bmi2_print_error_code(rslt);
+}
+
+void imuDisable(void)
+{
+  rslt = bmi2_sensor_disable(sensor_list, 2, &bmi);
+  bmi2_print_error_code(rslt);
+}
+
 void imuReadAccel(void){
 
     config.type = BMI2_ACCEL;
@@ -406,7 +419,7 @@ int16_t readAccelX(void){
     bmi2_print_error_code(rslt);
     if ((rslt == BMI2_OK) && (sensor_data.status & BMI2_DRDY_ACC)){
         return sensor_data.acc.x;
-    }else{
+    } else {
         return -1;
     }
 }
@@ -459,4 +472,62 @@ int16_t readGyroZ(void){
     }else{
         return -1;
     }
+}
+
+void imuInterruptCallback(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+  // uint8_t int_status = 0;
+  // imuRead(0x1D, &int_status, 1, NULL);
+  // if ((int_status >> 6) & 1) {
+  //   // gyro ready
+  // }
+
+  // if ((int_status >> 7) & 1) {
+  //   // accel ready
+  // }
+  if (buttonPressed()) {
+    eventQueuePush(EVENT_IMU_SAMPLE_DATA);
+  }
+}
+
+void imuSetupInterrupt(void)
+{
+  uint8_t int_io_ctrl = ((1 << 1) | (0 << 2) | (1 << 3) | (0 << 4));
+  imuWrite(0x53, &int_io_ctrl, 1, NULL);
+
+  uint8_t int_map_data = (1 << 2);
+  imuWrite(0x58, &int_map_data, 1, NULL);
+
+  nrf_drv_gpiote_in_config_t imuInterruptConfig = NRFX_GPIOTE_CONFIG_IN_SENSE_LOTOHI(true);
+  ret_code_t err_code = gpioInputEnable(IMU_INT1_PIN, &imuInterruptConfig, imuInterruptCallback);
+  APP_ERROR_CHECK(err_code);
+  gpioInterruptEnable(IMU_INT1_PIN);
+}
+
+bool imuReadData(uint8_t **data)
+{
+  rslt = bmi2_get_sensor_data(&sensor_data, &bmi);
+  bmi2_print_error_code(rslt);
+
+  if ((rslt == BMI2_OK) && ((sensor_data.status & BMI2_DRDY_ACC) && (sensor_data.status & BMI2_DRDY_GYR))) {
+
+    imuData[0] = sensor_data.acc.x & 0xFF;
+    imuData[1] = (sensor_data.acc.x >> 8) & 0xFF;
+    imuData[2] = sensor_data.acc.y & 0xFF;
+    imuData[3] = (sensor_data.acc.y >> 8) & 0xFF;
+    imuData[4] = sensor_data.acc.z & 0xFF;
+    imuData[5] = (sensor_data.acc.z >> 8) & 0xFF;
+    imuData[6] = sensor_data.gyr.x & 0xFF;
+    imuData[7] = (sensor_data.gyr.x >> 8) & 0xFF;
+    imuData[8] = sensor_data.gyr.y & 0xFF;
+    imuData[9] = (sensor_data.gyr.y >> 8) & 0xFF;
+    imuData[10] = sensor_data.gyr.z & 0xFF;
+    imuData[11] = (sensor_data.gyr.z >> 8) & 0xFF;
+
+    *data = imuData;
+
+    return true;
+  } else {
+    return false;
+  }
 }

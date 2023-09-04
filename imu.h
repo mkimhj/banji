@@ -16,7 +16,7 @@
 
 
 #ifndef IMU_H
-#define IMU_H 
+#define IMU_H
 
 void imuInit(void);
 int8_t imuRead(uint8_t reg_addr, uint8_t *reg_data, uint32_t len, void *intf_ptr); // defined by Bosch API
@@ -30,5 +30,9 @@ int16_t readGyroZ(void);
 void imuDelay(uint32_t period, void *intf_ptr);
 void imuReadAccel(void);
 void imuReadGyro(void);
+void imuSetupInterrupt(void);
+bool imuReadData(uint8_t **data);
+void imuEnable(void);
+void imuDisable(void);
 
 #endif

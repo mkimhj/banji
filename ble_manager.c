@@ -73,6 +73,13 @@ static uint16_t ringBufferTail = 0;
 static int ringBufferBytesUsed = 0;
 static uint8_t sequenceNumber = 0;
 
+// max buffer size is 10 seconds * sampling frequency * (accel_count+gyro_count) * bytes_per_sample
+#define IMU_BUFFER_SIZE (10 * IMU_FREQUENCY_HZ * 6 * 2)
+static uint8_t imuBuffer[IMU_BUFFER_SIZE] = {0};
+static uint16_t imuBufferHead = 0;
+static uint16_t imuBufferTail = 0;
+static int imuBufferBytesUsed = 0;
+
 char const * phy_str(ble_gap_phys_t phys)
 {
   static char const * str[] =
@@ -561,30 +568,39 @@ void send(void)
       startOfFrame = false;
     }
 
-    if (gpioRead(BUTTON_PIN) == 0) {
-      bleCusPacket[1] |= 0b10;
+    bool pressed = buttonPressed();
+
+    if (pressed) {
+      bleCusPacket[1] |= 0b10; // button state
+
+      if (imuBufferBytesUsed >= 12) {
+        bleCusPacket[1] |= 0b100; // mark imu data as valid
+        for (int i = 2; i < 14; i++) {
+          bleCusPacket[i] = imuBuffer[(imuBufferHead + (i - 2)) % IMU_BUFFER_SIZE];
+        }
+      }
+
+      // int16_t accelX = readAccelX();
+      // int16_t accelY = readAccelY();
+      // int16_t accelZ = readAccelZ();
+      // int16_t gyroX = readGyroX();
+      // int16_t gyroY = readGyroY();
+      // int16_t gyroZ = readGyroZ();
+
+      // bleCusPacket[2] = accelX & 0xFF;
+      // bleCusPacket[3] = (accelX >> 8) & 0xFF;
+      // bleCusPacket[4] = accelY & 0xFF;
+      // bleCusPacket[5] = (accelY >> 8) & 0xFF;
+      // bleCusPacket[6] = accelZ & 0xFF;
+      // bleCusPacket[7] = (accelZ >> 8) & 0xFF;
+
+      // bleCusPacket[8] = gyroX & 0xFF;
+      // bleCusPacket[9] = (gyroX >> 8) & 0xFF;
+      // bleCusPacket[10] = gyroY & 0xFF;
+      // bleCusPacket[11] = (gyroY >> 8) & 0xFF;
+      // bleCusPacket[12] = gyroZ & 0xFF;
+      // bleCusPacket[13] = (gyroZ >> 8) & 0xFF;
     }
-
-    int16_t accelX = readAccelX();
-    int16_t accelY = readAccelY();
-    int16_t accelZ = readAccelZ();
-    int16_t gyroX = readGyroX();
-    int16_t gyroY = readGyroY();
-    int16_t gyroZ = readGyroZ();
-
-    bleCusPacket[2] = accelX & 0xFF;
-    bleCusPacket[3] = (accelX >> 8) & 0xFF;
-    bleCusPacket[4] = accelY & 0xFF;
-    bleCusPacket[5] = (accelY >> 8) & 0xFF;
-    bleCusPacket[6] = accelZ & 0xFF;
-    bleCusPacket[7] = (accelZ >> 8) & 0xFF;
-
-    bleCusPacket[8] = gyroX & 0xFF;
-    bleCusPacket[9] = (gyroX >> 8) & 0xFF;
-    bleCusPacket[10] = gyroY & 0xFF;
-    bleCusPacket[11] = (gyroY >> 8) & 0xFF;
-    bleCusPacket[12] = gyroZ & 0xFF;
-    bleCusPacket[13] = (gyroZ >> 8) & 0xFF;
 
     for (int i = cameraDataStartIndex; i < length; i++) {
       bleCusPacket[i] = ringBuffer[(ringBufferHead + (i - cameraDataStartIndex)) % RING_BUFFER_SIZE];
@@ -597,6 +613,11 @@ void send(void)
       ringBufferBytesUsed -= (length - cameraDataStartIndex);
       sequenceNumber++;
       pixelsSent += length - cameraDataStartIndex;
+
+      if (imuBufferBytesUsed >= 12) {
+        imuBufferHead = (imuBufferHead + (12)) % IMU_BUFFER_SIZE;
+        imuBufferBytesUsed -= 12;
+      }
     }
   }
 }
@@ -617,6 +638,29 @@ void bleSendData(uint8_t * data, uint16_t length)
   ringBufferTail = (ringBufferTail + length) % RING_BUFFER_SIZE;
   ringBufferBytesUsed += length;
   send();
+}
+
+void bleImuSendData(uint8_t * data, uint16_t length)
+{
+  if (length > IMU_BUFFER_SIZE) {
+    NRF_LOG_RAW_INFO("[ble] input too large\n");
+  }
+
+  for (uint16_t i = 0; i < length; i++)
+  {
+    imuBuffer[(imuBufferTail + i) % IMU_BUFFER_SIZE] = data[i];
+  }
+
+  imuBufferTail = (imuBufferTail + length) % IMU_BUFFER_SIZE;
+  imuBufferBytesUsed += length;
+  send();
+}
+
+void bleImuResetBuffer(void)
+{
+  imuBufferHead = 0;
+  imuBufferTail = 0;
+  imuBufferBytesUsed = 0;
 }
 
 bool bleBufferHasSpace(uint16_t length)

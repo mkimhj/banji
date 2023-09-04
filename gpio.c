@@ -45,8 +45,8 @@ void gpioInit(void)
 
   gpioOutputEnable(LED1_PIN);
   gpioOutputEnable(LED2_PIN);
-  gpioWrite(LED1_PIN, 0);
-  gpioWrite(LED2_PIN, 0);
+  gpioWrite(LED1_PIN, 1);
+  gpioWrite(LED2_PIN, 1);
 
   nrf_drv_gpiote_in_config_t buttonInterruptConfig = NRFX_GPIOTE_CONFIG_IN_SENSE_TOGGLE(true);
   buttonInterruptConfig.pull = NRF_GPIO_PIN_PULLUP;
