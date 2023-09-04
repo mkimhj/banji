@@ -27,5 +27,6 @@
 static nrf_drv_timer_t CAM_TIMER = NRF_DRV_TIMER_INSTANCE(3);
 
 void hm_clk_out(void);
+void hm_clk_enable(bool enable);
 
 #endif /* HM01B0_CLK_H_ */

@@ -35,4 +35,6 @@ bool hm_get_capture_done(void);
 void hm_reset_capture_done(void);
 void hm_set_capture_done(void);
 
+void hm_standby_mode(bool standby);
+
 #endif /* HM01B0_CAPTURE_H_ */

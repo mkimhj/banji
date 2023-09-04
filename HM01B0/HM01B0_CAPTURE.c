@@ -165,3 +165,21 @@ void hm_single_capture_spi_832(void)
     __WFE();
   };
 }
+
+void hm_standby_mode(bool standby)
+{
+  static bool currentStandby = false;
+  if (standby) {
+    i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT, 0x00);
+    hm_clk_enable(false);
+    // spiSlaveDeInit();
+    // Clock gate
+    currentStandby = true;
+  } else if (currentStandby) {
+    // spiSlaveInit();
+    // spiSlaveSetBuffers();
+    // spiSlaveClearByteCounters();
+    hm_clk_enable(true);
+    i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT, STREAMING_MODE);
+  }
+}

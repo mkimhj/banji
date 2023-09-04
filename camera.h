@@ -9,5 +9,6 @@ uint32_t cameraGetLines(uint8_t **lines);
 uint32_t cameraGetBytesReceived(void);
 void cameraReadyForMoreData(void);
 void cameraReadyNextFrame(void);
+void cameraEnableStandbyMode(bool);
 
 #endif

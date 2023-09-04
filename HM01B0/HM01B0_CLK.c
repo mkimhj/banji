@@ -57,3 +57,12 @@ void hm_clk_out(void)
 
   nrf_drv_timer_enable(&CAM_TIMER);
 }
+
+void hm_clk_enable(bool enable)
+{
+  if (enable) {
+    nrf_drv_timer_enable(&CAM_TIMER);
+  } else {
+    nrf_drv_timer_disable(&CAM_TIMER);
+  }
+}

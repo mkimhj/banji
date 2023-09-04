@@ -84,3 +84,8 @@ void cameraReadyForMoreData(void)
 {
   spiSlaveClearEventQueued();
 }
+
+void cameraEnableStandbyMode(bool standby)
+{
+  hm_standby_mode(standby);
+}

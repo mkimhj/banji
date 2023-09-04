@@ -99,12 +99,21 @@ void i2cInit(void)
   err_code = nrf_drv_twi_init(&i2cHandle, &i2c_config, i2cHandler, NULL);
   APP_ERROR_CHECK(err_code);
 
-  nrf_drv_twi_enable(&i2cHandle);
+  // nrf_drv_twi_enable(&i2cHandle);
   transferDone = false;
+}
+
+void i2cEnable(bool enable) {
+  if (enable) {
+    nrf_drv_twi_enable(&i2cHandle);
+  } else {
+    nrf_drv_twi_disable(&i2cHandle);
+  }
 }
 
 void i2cScan(void)
 {
+  i2cEnable(true);
   ret_code_t err_code;
   uint8_t sample_data;
   bool detected_device = false;
@@ -130,10 +139,12 @@ void i2cScan(void)
   {
     NRF_LOG_INFO("No device was found.");
   }
+  i2cEnable(false);
 }
 
 bool i2cScanForPmu(void)
 {
+  i2cEnable(true);
   ret_code_t err_code;
   uint8_t sample_data;
   bool detected_device = false;
@@ -153,6 +164,7 @@ bool i2cScanForPmu(void)
       NRF_LOG_INFO("TWI device detected at address 0x%x.", address);
     }
   }
+  i2cEnable(false);
 
   return detected_device;
 }
@@ -160,6 +172,7 @@ bool i2cScanForPmu(void)
 // 8bit registers
 void i2cWrite8(uint8_t addr, uint8_t reg, uint8_t data)
 {
+  i2cEnable(true);
   ret_code_t err_code;
   uint8_t bytes[2] = {reg, data};
   resetFlags();
@@ -171,10 +184,13 @@ void i2cWrite8(uint8_t addr, uint8_t reg, uint8_t data)
   {
     NRF_LOG_INFO("[i2c] failed to write");
   }
+
+  i2cEnable(false);
 }
 
 uint8_t i2cRead8(uint8_t addr, uint8_t reg)
 {
+  i2cEnable(true);
   ret_code_t err_code;
   uint8_t rxData;
 
@@ -187,13 +203,14 @@ uint8_t i2cRead8(uint8_t addr, uint8_t reg)
   err_code = nrf_drv_twi_rx(&i2cHandle, addr, &rxData, sizeof(rxData));
   APP_ERROR_CHECK(err_code);
   waitForTransfer();
-
+  i2cEnable(false);
   return rxData;
 };
 
 // 16 bit registers
 void i2cWrite16(uint8_t addr, uint16_t reg, uint8_t data)
 {
+  i2cEnable(true);
   ret_code_t err_code;
   uint8_t bytes[3] = {0};
   bytes[0] = (reg >> 8) & 0xFF;
@@ -208,10 +225,12 @@ void i2cWrite16(uint8_t addr, uint16_t reg, uint8_t data)
   if (verifyWrite16(addr, reg, data) == false) {
     NRF_LOG_INFO("[i2c] failed to write addr:0x%x reg:0x%04x data:0x%04x", addr, reg, data);
   }
+  i2cEnable(false);
 }
 
 uint8_t i2cRead16(uint8_t addr, uint16_t reg)
 {
+  i2cEnable(true);
   ret_code_t err_code;
   uint8_t rxData;
   uint8_t bytes[2] = {0};
@@ -227,6 +246,7 @@ uint8_t i2cRead16(uint8_t addr, uint16_t reg)
   err_code = nrf_drv_twi_rx(&i2cHandle, addr, &rxData, sizeof(rxData));
   APP_ERROR_CHECK(err_code);
   waitForTransfer();
+  i2cEnable(false);
 
   return rxData;
 }

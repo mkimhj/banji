@@ -257,7 +257,7 @@ static void processQueue(void)
         NRF_LOG_RAW_INFO("%08d [button] pressed:%d resetCounter:%d\n", currentTimeMs, pressed, buttonPressedCounter);
 
         if (pressed) {
-          if ((currentTimeMs - lastPressedTimeMs) > 400) {
+          if ((currentTimeMs - lastPressedTimeMs) > BUTTON_DEBOUNCE_MS) {
             buttonPressedCounter = 0;
           }
 
@@ -265,6 +265,7 @@ static void processQueue(void)
           ++buttonPressedCounter;
           bleImuResetBuffer();
           imuEnable();
+          cameraEnableStandbyMode(false);
           // app_timer_start(imuTimer, IMU_TICKS, imuTimerCallback);
         } else if (buttonPressedCounter >= 5) {
           NRF_LOG_RAW_INFO("%08d [main] trigger power down\n", systemTimeGetMs());
@@ -274,6 +275,7 @@ static void processQueue(void)
           // button released
           // app_timer_stop(imuTimer);
           imuDisable();
+          cameraEnableStandbyMode(true);
         }
 
         break;
@@ -295,9 +297,13 @@ static void processQueue(void)
       case EVENT_TIMERS_ONE_SECOND_ELAPSED:
       {
         // NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
-        static bool ledOn = false;
-        gpioWrite(LED2_PIN, ledOn);
-        ledOn = !ledOn;
+        // LED draws about 20mA when on
+        if (!streaming) {
+          gpioWrite(LED2_PIN, 0);
+          delayMs(1);
+          gpioWrite(LED2_PIN, 1);
+        }
+
         break;
       }
 
