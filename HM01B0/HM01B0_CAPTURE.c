@@ -171,6 +171,7 @@ void hm_standby_mode(bool standby)
   static bool currentStandby = false;
   if (standby) {
     i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT, 0x00);
+    delayMs(5);
     hm_clk_enable(false);
     // spiSlaveDeInit();
     // Clock gate
@@ -180,6 +181,8 @@ void hm_standby_mode(bool standby)
     // spiSlaveSetBuffers();
     // spiSlaveClearByteCounters();
     hm_clk_enable(true);
+    delayMs(5);
     i2cWrite16(CAMERA_I2C_ADDR, REG_MODE_SELECT, STREAMING_MODE);
+    currentStandby = false;
   }
 }

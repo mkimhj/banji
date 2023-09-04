@@ -55,7 +55,7 @@
 #include "HM01B0_BLE_DEFINES.h"
 
 APP_TIMER_DEF(imuTimer);
-
+APP_TIMER_DEF(buttonReleaseTimer);
 static uint8_t imuBuffer[12] = {0};
 static bool bleRetry = false;
 static bool bleDataStreamRequested = false;
@@ -75,6 +75,11 @@ void assert_nrf_callback(uint16_t line_num, const uint8_t * p_file_name)
 static void imuTimerCallback(void * p_context)
 {
   eventQueuePush(EVENT_IMU_SAMPLE_DATA);
+}
+
+static void buttonReleaseTimerCallback(void * p_context)
+{
+  eventQueuePush(EVENT_STOP_SENSORS);
 }
 
 void powerEnterSleepMode(void)
@@ -171,7 +176,8 @@ static void banjiInit(void)
   ret_code_t err_code;
   err_code = app_timer_create(&imuTimer, APP_TIMER_MODE_REPEATED, imuTimerCallback);
   APP_ERROR_CHECK(err_code);
-
+  err_code = app_timer_create(&buttonReleaseTimer, APP_TIMER_MODE_SINGLE_SHOT, buttonReleaseTimerCallback);
+  APP_ERROR_CHECK(err_code);
   cliInit();
 
   NRF_LOG_RAW_INFO("Press the Tab key to see all available commands.\n");
@@ -273,9 +279,8 @@ static void processQueue(void)
           eventQueuePush(EVENT_POWER_ENTER_SLEEP_MODE);
         } else {
           // button released
-          // app_timer_stop(imuTimer);
-          imuDisable();
-          cameraEnableStandbyMode(true);
+          app_timer_stop(buttonReleaseTimer);
+          app_timer_start(buttonReleaseTimer, APP_TIMER_TICKS(3000), buttonReleaseTimerCallback);
         }
 
         break;
@@ -322,6 +327,11 @@ static void processQueue(void)
 
       case EVENT_POWER_ENTER_SLEEP_MODE:
         powerEnterSleepMode();
+        break;
+
+      case EVENT_STOP_SENSORS:
+        imuDisable();
+        cameraEnableStandbyMode(true);
         break;
 
       default:

@@ -30,6 +30,7 @@ typedef enum
   EVENT_POWER_ENTER_SLEEP_MODE,
   EVENT_IMU_SAMPLE_DATA,
   EVENT_IMU_DATA_READY,
+  EVENT_STOP_SENSORS,
 } event_t;
 
 void    eventQueueInit(void);
