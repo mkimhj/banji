@@ -367,6 +367,13 @@ void imuDisable(void)
 {
   rslt = bmi2_sensor_disable(sensor_list, 2, &bmi);
   bmi2_print_error_code(rslt);
+
+}
+
+void imuDeInit(void){
+    imuDisable();
+    gpioDisable(IMU_INT1_PIN);
+    gpioDisable(IMU_INT2_PIN);
 }
 
 void imuReadAccel(void){

@@ -303,6 +303,12 @@ void cliProcess(void)
   nrf_cli_process(&m_cli_libuarte);
 }
 
+void cliDeInit(void)
+{
+  APP_ERROR_CHECK(nrf_cli_uninit(&m_cli_libuarte));
+  gpioDisable(UART_TX_PIN);
+  gpioDisable(UART_RX_PIN);
+}
 
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_spis){
     NRF_CLI_CMD(receive, NULL, "spiBus, data, length", cmd_spis_receive),

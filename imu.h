@@ -34,5 +34,6 @@ void imuSetupInterrupt(void);
 bool imuReadData(uint8_t **data);
 void imuEnable(void);
 void imuDisable(void);
+void imuDeInit(void); 
 
 #endif

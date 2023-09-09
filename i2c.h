@@ -20,3 +20,4 @@ void i2cWrite8(uint8_t addr, uint8_t reg, uint8_t data);
 uint8_t i2cRead16(uint8_t addr, uint16_t reg);
 uint8_t i2cRead8(uint8_t addr, uint8_t reg);
 bool i2cScanForPmu(void);
+void i2cEnable(bool enable);
