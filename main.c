@@ -332,6 +332,7 @@ static void processQueue(void)
       {
         // NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
         // LED draws about 20mA when on
+        static bool charging = false;
         if (!streaming) {
           gpioWrite(LED2_PIN, 0);
           delayMs(1);
@@ -340,6 +341,11 @@ static void processQueue(void)
             // charging
             gpioWrite(LED1_PIN, 0);
             app_timer_start(chargeTimer, APP_TIMER_TICKS(3000), chargeTimerCallback);
+            charging = true;
+          }else if(charging && !MAX77650_getCHG()){
+            // not charging
+            charging = false;
+            NVIC_SystemReset();
           }
         }
         break;
