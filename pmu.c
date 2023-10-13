@@ -21,9 +21,9 @@
 
 // Charging Configuration
 #define CHG_CV    0x18  // 4.2 V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
-#define CHG_CC    0x00  // 7.5 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
+#define CHG_CC    0x01  // 15 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
 #define CHGIN_LIM 0b100 // 475 mA charge input current limit.(CNFG_CHG_B: 0x19)
-#define VSYS_REG  0x10  // 4.5V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
+#define VSYS_REG  0x08  // 4.5V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
 
 uint8_t MAX77650_read_register(uint8_t ADDR){
     return i2cRead8(MAX77651_I2C_ADDRESS, ADDR);
@@ -1015,12 +1015,12 @@ void pmu_init(void)
     MAX77650_setI_PQ(false);
   }
 
-  // Set prequalification charge voltage to 3.0V
+  // Set prequalification charge voltage to 2.3V
   if (MAX77650_debug){
-    NRF_LOG_RAW_INFO("Set Battery prequalification voltage threshold to 3.0V: ");
-    pmu_print_error(MAX77650_setCHG_PQ(0b111));
+    NRF_LOG_RAW_INFO("Set Battery prequalification voltage threshold to 2.3V: ");
+    pmu_print_error(MAX77650_setCHG_PQ(0b000));
   }else{
-    MAX77650_setCHG_PQ(0b111);
+    MAX77650_setCHG_PQ(0b000);
   }
 
   // Set charger termination current to 15% of fast charge current
