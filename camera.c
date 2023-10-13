@@ -37,6 +37,19 @@ void cameraInit(void)
 void cameraDeInit(void)
 {
   cameraInitialized = false;
+
+  gpioDisable(CAM_MCLK_IN_FROM_MCU); 
+  gpioDisable(CAM_INT);
+  gpioDisable(CAM_LINE_VALID);
+  gpioDisable(CAM_FRAME_VALID);
+  gpioDisable(CAM_PCLK_OUT_TO_MCU);
+  gpioDisable(CAM_D0);
+  gpioDisable(CAM_D1);
+  gpioDisable(CAM_D2);
+  gpioDisable(CAM_D3);
+
+  hm_peripheral_uninit();
+  hm_clk_enable(false);
   // TODO: Fill this out
 }
 

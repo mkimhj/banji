@@ -21,9 +21,9 @@
 
 // IMU
 #define IMU_INT1_PIN                      NRF_GPIO_PIN_MAP(0, 2)
-#define ACCEL_INT1_PIN                    NRF_GPIO_PIN_MAP(0, 2)
-#define ACCEL_INT2_PIN                    NRF_GPIO_PIN_MAP(0, 31)
+#define IMU_INT2_PIN                      NRF_GPIO_PIN_MAP(0, 31)
 #define ACCEL_EN_PIN                      NRF_GPIO_PIN_MAP(0, 30)
+
 
 // LED
 #define LED1_PIN                          NRF_GPIO_PIN_MAP(0, 7)                // 0 to turn on, 1 to turn off
@@ -45,6 +45,9 @@
 #define CAM_LINE_VALID                    NRF_GPIO_PIN_MAP(0, 11)  // Input
 #define CAM_INT                           NRF_GPIO_PIN_MAP(0, 9)   // Input
 #define CAM_MCLK_IN_FROM_MCU              NRF_GPIO_PIN_MAP(1, 8)
+#define CAM_D1                            NRF_GPIO_PIN_MAP(0, 21)
+#define CAM_D2                            NRF_GPIO_PIN_MAP(0, 22) 
+#define CAM_D3                            NRF_GPIO_PIN_MAP(0, 23)
 
 // Wrapper
 #define GPIO_INTERRUPT_CONFIG_RISING  GPIOTE_CONFIG_IN_SENSE_LOTOHI(true)

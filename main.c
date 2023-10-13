@@ -56,6 +56,7 @@
 
 APP_TIMER_DEF(imuTimer);
 APP_TIMER_DEF(buttonReleaseTimer);
+APP_TIMER_DEF(chargeTimer);
 static uint8_t imuBuffer[12] = {0};
 static bool bleRetry = false;
 static bool bleDataStreamRequested = false;
@@ -82,6 +83,13 @@ static void buttonReleaseTimerCallback(void * p_context)
   eventQueuePush(EVENT_STOP_SENSORS);
 }
 
+static void chargeTimerCallback(void * p_context)
+{
+  // disable LED after 3 seconds
+  gpioWrite(LED1_PIN, 1);
+  app_timer_stop(chargeTimer);
+}
+
 void powerEnterSleepMode(void)
 {
   ret_code_t err_code;
@@ -98,6 +106,26 @@ void powerEnterSleepMode(void)
   // err_code = bsp_btn_ble_sleep_mode_prepare();
   // APP_ERROR_CHECK(err_code);
   nrf_gpio_cfg_sense_set(BUTTON_PIN, NRF_GPIO_PIN_SENSE_LOW);
+
+  // LEDs
+  gpioDisable(LED1_PIN);
+  gpioDisable(LED2_PIN);
+
+  // IMU
+  imuDeInit();
+
+  // Camera
+  cameraDeInit();
+
+  // Turn off PMIC power rails SBB0, SBB2 and LDO
+  MAX77650_setADE_SBB0(true); // enable active discharge
+  MAX77650_setADE_SBB2(true); 
+  MAX77650_setEN_SBB0(0b100); // turn off
+  MAX77650_setEN_SBB2(0b100); 
+  MAX77650_setEN_LDO(0b100);  
+
+  // disable cli
+  cliDeInit();
 
   // Go to system-off mode (this function will not return; wakeup will cause a reset).
   err_code = sd_power_system_off();
@@ -177,6 +205,7 @@ static void banjiInit(void)
   err_code = app_timer_create(&imuTimer, APP_TIMER_MODE_REPEATED, imuTimerCallback);
   APP_ERROR_CHECK(err_code);
   err_code = app_timer_create(&buttonReleaseTimer, APP_TIMER_MODE_SINGLE_SHOT, buttonReleaseTimerCallback);
+  err_code = app_timer_create(&chargeTimer, APP_TIMER_MODE_SINGLE_SHOT, chargeTimerCallback);
   APP_ERROR_CHECK(err_code);
   cliInit();
 
@@ -304,12 +333,22 @@ static void processQueue(void)
       {
         // NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
         // LED draws about 20mA when on
+        static bool charging = false;
         if (!streaming) {
           gpioWrite(LED2_PIN, 0);
           delayMs(1);
           gpioWrite(LED2_PIN, 1);
+          if(MAX77650_getCHG()){
+            // charging
+            gpioWrite(LED1_PIN, 0);
+            app_timer_start(chargeTimer, APP_TIMER_TICKS(3000), chargeTimerCallback);
+            charging = true;
+          }else if(charging && !MAX77650_getCHG()){
+            // not charging
+            charging = false;
+            NVIC_SystemReset();
+          }
         }
-
         break;
       }
 
