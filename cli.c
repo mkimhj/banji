@@ -170,7 +170,7 @@ static void cmd_imu_setReg(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   uint8_t regAddr = (uint8_t)strtol(argv[1], NULL, 16);
   const uint8_t regData = (uint8_t)strtol(argv[2], NULL, 16);
-  imuWrite(regAddr, &regData, 1, NULL); 
+  imuWrite(regAddr, &regData, 1, NULL);
 }
 
 static void cmd_imu_readChipID(nrf_cli_t const *p_cli, size_t argc, char **argv)

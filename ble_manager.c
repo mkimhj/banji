@@ -79,6 +79,7 @@ static uint8_t imuBuffer[IMU_BUFFER_SIZE] = {0};
 static uint16_t imuBufferHead = 0;
 static uint16_t imuBufferTail = 0;
 static int imuBufferBytesUsed = 0;
+static bool buttonWasPressed  = false;
 
 char const * phy_str(ble_gap_phys_t phys)
 {
@@ -568,7 +569,7 @@ void send(void)
       startOfFrame = false;
     }
 
-    bool pressed = buttonPressed();
+    bool pressed = (buttonPressed() || buttonWasPressed);
 
     if (pressed) {
       bleCusPacket[1] |= 0b10; // button state
@@ -618,6 +619,10 @@ void send(void)
         imuBufferHead = (imuBufferHead + (12)) % IMU_BUFFER_SIZE;
         imuBufferBytesUsed -= 12;
       }
+
+      if (buttonWasPressed) {
+        buttonWasPressed = false;
+      }
     }
   }
 }
@@ -654,6 +659,11 @@ void bleImuSendData(uint8_t * data, uint16_t length)
   imuBufferTail = (imuBufferTail + length) % IMU_BUFFER_SIZE;
   imuBufferBytesUsed += length;
   send();
+}
+
+void bleSetButtonPressed(bool pressed)
+{
+  buttonWasPressed = pressed;
 }
 
 void bleImuResetBuffer(void)
