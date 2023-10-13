@@ -14,6 +14,8 @@ void send(void);
 void bleImuSendData(uint8_t * data, uint16_t length);
 void bleImuResetBuffer(void);
 
+void bleSetButtonPressed(bool pressed);
+
 // ble_bytes_sent_counter from prev codebase
 void bleSetPixelsSent(uint32_t value);
 uint32_t bleGetPixelsSent(void);

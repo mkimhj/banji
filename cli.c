@@ -170,7 +170,7 @@ static void cmd_imu_setReg(nrf_cli_t const *p_cli, size_t argc, char **argv)
 {
   uint8_t regAddr = (uint8_t)strtol(argv[1], NULL, 16);
   const uint8_t regData = (uint8_t)strtol(argv[2], NULL, 16);
-  imuWrite(regAddr, &regData, 1, NULL); 
+  imuWrite(regAddr, &regData, 1, NULL);
 }
 
 static void cmd_imu_readChipID(nrf_cli_t const *p_cli, size_t argc, char **argv)
@@ -302,7 +302,6 @@ void cliProcess(void)
 {
   nrf_cli_process(&m_cli_libuarte);
 }
-
 
 NRF_CLI_CREATE_STATIC_SUBCMD_SET(m_sub_spis){
     NRF_CLI_CMD(receive, NULL, "spiBus, data, length", cmd_spis_receive),

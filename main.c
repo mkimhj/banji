@@ -272,6 +272,7 @@ static void processQueue(void)
           bleImuResetBuffer();
           imuEnable();
           cameraEnableStandbyMode(false);
+          bleSetButtonPressed(pressed);
           // app_timer_start(imuTimer, IMU_TICKS, imuTimerCallback);
         } else if (buttonPressedCounter >= 5) {
           NRF_LOG_RAW_INFO("%08d [main] trigger power down\n", systemTimeGetMs());
