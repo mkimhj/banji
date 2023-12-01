@@ -11,19 +11,19 @@
 #include "i2c.h"
 #include "timers.h"
 
-#define MAX77650_debug true
+#define MAX77650_debug false 
 
 // Target Voltages
-#define TV_SBB0 0x1C // 1.5V
-#define TV_SBB1 0x20 // 2.8V  (can only go down to 2.4V)
-#define TV_SBB2 0x08 // 2.8V
-#define TV_LDO  0x74 // 2.8V
+#define TV_SBB0 0x3F // 2.8V CNFG_SBB0_A (this only goes up to 2.35)
+#define TV_SBB1 0x38 // 1.5V  (can only go down to 2.4V) CNFG_SBB1_A
+#define TV_SBB2 0x14 // 1.8V CNFG_SBB2_A
+#define TV_LDO  0x50 // 2.35V
 
 // Charging Configuration
 #define CHG_CV    0x18  // 4.2 V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
 #define CHG_CC    0x01  // 15 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
 #define CHGIN_LIM 0b100 // 475 mA charge input current limit.(CNFG_CHG_B: 0x19)
-#define VSYS_REG  0x08  // 4.5V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
+#define VSYS_REG  0x08  // 4.3 V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
 
 uint8_t MAX77650_read_register(uint8_t ADDR){
     return i2cRead8(MAX77651_I2C_ADDRESS, ADDR);

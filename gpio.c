@@ -8,6 +8,7 @@
 #include "boards.h"
 #include "gpio.h"
 #include "event.h"
+#include "timers.h"
 
 void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {
@@ -16,7 +17,18 @@ void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t acti
 
 bool buttonPressed(void)
 {
-  return (gpioRead(BUTTON_PIN) == 0);
+  //return (gpioRead(BUTTON_PIN) == 0);
+
+  // simulate button on for 5 seconds, off for 5 seconds
+  static uint32_t buttonPressTime = 0; 
+  static bool buttonState = false;
+  if (systemTimeGetMs() - buttonPressTime > 5000) {
+    buttonPressTime = systemTimeGetMs();
+    buttonState = !buttonState;
+  }
+
+  return buttonState;
+  
 }
 
 void gpioInit(void)

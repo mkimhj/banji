@@ -24,6 +24,8 @@
 #define IMU_INT2_PIN                      NRF_GPIO_PIN_MAP(0, 31)
 #define ACCEL_EN_PIN                      NRF_GPIO_PIN_MAP(0, 30)
 
+#define ACCEL_INT1_PIN                    NRF_GPIO_PIN_MAP(1,9) 
+
 
 // LED
 #define LED1_PIN                          NRF_GPIO_PIN_MAP(0, 7)                // 0 to turn on, 1 to turn off

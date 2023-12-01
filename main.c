@@ -117,11 +117,12 @@ void powerEnterSleepMode(void)
   // Camera
   cameraDeInit();
 
-  // Turn off PMIC power rails SBB0, SBB2 and LDO
+  // Turn off PMIC power rails SBB0, SBB1 and LDO 
+  // Do not turn of nRF rail (1.8V = SBB2)
   MAX77650_setADE_SBB0(true); // enable active discharge
-  MAX77650_setADE_SBB2(true); 
+  MAX77650_setADE_SBB1(true);
   MAX77650_setEN_SBB0(0b100); // turn off
-  MAX77650_setEN_SBB2(0b100); 
+  MAX77650_setEN_SBB1(0b100);
   MAX77650_setEN_LDO(0b100);  
 
   // disable cli
@@ -139,7 +140,7 @@ static void bsp_event_handler(bsp_event_t event)
   switch (event)
   {
     case BSP_EVENT_SLEEP:
-      powerEnterSleepMode();
+      //powerEnterSleepMode();
       break;
 
     case BSP_EVENT_DISCONNECT:
@@ -199,7 +200,6 @@ static void banjiInit(void)
   gpioInit();
   logInit();
   NRF_LOG_RAW_INFO("%08d [banji] booting...\n", systemTimeGetMs());
-
   timersInit();
   ret_code_t err_code;
   err_code = app_timer_create(&imuTimer, APP_TIMER_MODE_REPEATED, imuTimerCallback);
@@ -256,6 +256,7 @@ static void processQueue(void)
       {
         cameraInit();
         cameraStartStream();
+        imuEnable();
         streaming = true;
         break;
       }
@@ -296,6 +297,11 @@ static void processQueue(void)
             buttonPressedCounter = 0;
           }
 
+          // bool cameraDetected = i2cScan();
+          // if (cameraDetected) {
+          //   gpioWrite(LED2_PIN, 0); 
+          // }
+
           lastPressedTimeMs = currentTimeMs;
           ++buttonPressedCounter;
           bleImuResetBuffer();
@@ -310,7 +316,7 @@ static void processQueue(void)
         } else {
           // button released
           app_timer_stop(buttonReleaseTimer);
-          app_timer_start(buttonReleaseTimer, APP_TIMER_TICKS(3000), buttonReleaseTimerCallback);
+          //app_timer_start(buttonReleaseTimer, APP_TIMER_TICKS(3000), buttonReleaseTimerCallback);
         }
 
         break;
@@ -366,7 +372,7 @@ static void processQueue(void)
         break;
 
       case EVENT_POWER_ENTER_SLEEP_MODE:
-        powerEnterSleepMode();
+        //powerEnterSleepMode();
         break;
 
       case EVENT_STOP_SENSORS:
