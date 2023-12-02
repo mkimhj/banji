@@ -32,7 +32,7 @@ void lvld_timer_enable(void)
 
 void lvld_timer_disable(void)
 {
-  nrf_drv_timer_disable(&TIMER_LVLD);
+  nrf_drv_timer_disable(&TIMER_LVLD); 
 }
 
 /**

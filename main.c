@@ -63,6 +63,8 @@ static bool bleDataStreamRequested = false;
 static uint32_t expectedBufferCount = 0;
 static uint8_t frameCount = 0;
 static bool streaming = false;
+static bool chargingDisplayed = false;
+static bool charging = false;
 
 static uint8_t metadataIndex = 0;
 static uint8_t metadata[180] = { 0 };
@@ -85,9 +87,8 @@ static void buttonReleaseTimerCallback(void * p_context)
 
 static void chargeTimerCallback(void * p_context)
 {
-  // disable LED after 3 seconds
+  // disable LED after 8 seconds
   gpioWrite(LED1_PIN, 1);
-  app_timer_stop(chargeTimer);
 }
 
 void powerEnterSleepMode(void)
@@ -96,37 +97,54 @@ void powerEnterSleepMode(void)
 
   NRF_LOG_RAW_INFO("%08d [power] powering off...\n", systemTimeGetMs());
 
-  // err_code = bsp_indication_set(BSP_INDICATE_IDLE);
-  // APP_ERROR_CHECK(err_code);
+  // Turn on LED to signal sleep entry
+  // gpioWrite(LED1_PIN, 0);
+  // gpioWrite(LED2_PIN, 0);
 
   spiDeInit();
   delayMs(1);
 
   // Prepare wakeup buttons.
-  // err_code = bsp_btn_ble_sleep_mode_prepare();
-  // APP_ERROR_CHECK(err_code);
   nrf_gpio_cfg_sense_set(BUTTON_PIN, NRF_GPIO_PIN_SENSE_LOW);
+
+  // IMU Pins
+  gpioInterruptDisable(IMU_INT1_PIN);
+  gpioDisable(IMU_INT1_PIN);
+  gpioDisable(IMU_INT2_PIN);
+  
+  // Camera
+  cameraDeInit();
 
   // LEDs
   gpioDisable(LED1_PIN);
   gpioDisable(LED2_PIN);
 
-  // IMU
-  imuDeInit();
-
-  // Camera
-  cameraDeInit();
-
-  // Turn off PMIC power rails SBB0, SBB1 and LDO 
+  // Turn off PMIC power rails SBB0, SBB1 and LDO
   // Do not turn of nRF rail (1.8V = SBB2)
   MAX77650_setADE_SBB0(true); // enable active discharge
-  MAX77650_setADE_SBB1(true);
   MAX77650_setEN_SBB0(0b100); // turn off
-  MAX77650_setEN_SBB1(0b100);
-  MAX77650_setEN_LDO(0b100);  
+
+  //MAX77650_setADE_SBB1(true);
+  MAX77650_setEN_SBB1(0b100); // having problems with this one
+
+  MAX77650_setEN_LDO(0b100);
+
+  // Set main bias to low power
+  MAX77650_setSBIA_LPM(true);
 
   // disable cli
   cliDeInit();
+
+  // disable I2C
+  gpioDisable(I2C_SCL_PIN);
+  gpioDisable(I2C_SDA_PIN);
+
+  gpioDisable(CAM_POWER);
+  gpioDisable(CAM_SPI_CS_OUT);
+  gpioInterruptDisable(CAM_SPI_CS_IN);
+  gpioDisable(CAM_SPI_CS_IN);
+
+  timersDeInit();
 
   // Go to system-off mode (this function will not return; wakeup will cause a reset).
   err_code = sd_power_system_off();
@@ -140,7 +158,7 @@ static void bsp_event_handler(bsp_event_t event)
   switch (event)
   {
     case BSP_EVENT_SLEEP:
-      //powerEnterSleepMode();
+      powerEnterSleepMode();
       break;
 
     case BSP_EVENT_DISCONNECT:
@@ -256,7 +274,7 @@ static void processQueue(void)
       {
         cameraInit();
         cameraStartStream();
-        imuEnable();
+
         streaming = true;
         break;
       }
@@ -297,11 +315,6 @@ static void processQueue(void)
             buttonPressedCounter = 0;
           }
 
-          // bool cameraDetected = i2cScan();
-          // if (cameraDetected) {
-          //   gpioWrite(LED2_PIN, 0); 
-          // }
-
           lastPressedTimeMs = currentTimeMs;
           ++buttonPressedCounter;
           bleImuResetBuffer();
@@ -316,6 +329,8 @@ static void processQueue(void)
         } else {
           // button released
           app_timer_stop(buttonReleaseTimer);
+
+          // TODO: Comment this back in once Gesture code is complete
           //app_timer_start(buttonReleaseTimer, APP_TIMER_TICKS(3000), buttonReleaseTimerCallback);
         }
 
@@ -332,26 +347,25 @@ static void processQueue(void)
         break;
 
       case EVENT_BLE_IDLE:
-        // powerEnterSleepMode();
+        powerEnterSleepMode();
         break;
 
       case EVENT_TIMERS_ONE_SECOND_ELAPSED:
       {
         // NRF_LOG_RAW_INFO("%08d [main] EVENT_TIMERS_ONE_SECOND_ELAPSED\n", systemTimeGetMs());
         // LED draws about 20mA when on
-        static bool charging = false;
         if (!streaming) {
           gpioWrite(LED2_PIN, 0);
           delayMs(1);
           gpioWrite(LED2_PIN, 1);
-          if(MAX77650_getCHG()){
+          if (pmuIsCharging() && (chargingDisplayed == false)) {
             // charging
+            chargingDisplayed = true;
             gpioWrite(LED1_PIN, 0);
-            app_timer_start(chargeTimer, APP_TIMER_TICKS(3000), chargeTimerCallback);
+            app_timer_start(chargeTimer, APP_TIMER_TICKS(8000), chargeTimerCallback);
             charging = true;
-          }else if(charging && !MAX77650_getCHG()){
+          } else if (charging && !pmuIsCharging()) {
             // not charging
-            charging = false;
             NVIC_SystemReset();
           }
         }
@@ -372,7 +386,7 @@ static void processQueue(void)
         break;
 
       case EVENT_POWER_ENTER_SLEEP_MODE:
-        //powerEnterSleepMode();
+        powerEnterSleepMode();
         break;
 
       case EVENT_STOP_SENSORS:

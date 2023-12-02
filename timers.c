@@ -89,3 +89,14 @@ void timersInit(void)
   // err_code = app_timer_start(m_app_timer_id, TIMER_INTERVAL, NULL);
   // APP_ERROR_CHECK(err_code); */
 }
+
+void timersDeInit(void)
+{
+  // nrf_drv_clock_uninit();
+  // app_timer_stop_all();
+  SYSTEM_TIMER->TASKS_SHUTDOWN = 1;
+  // NRF_TIMER2->TASKS_SHUTDOWN = 1;
+  // NRF_TIMER3->TASKS_SHUTDOWN = 1;
+  // NRF_TIMER4->TASKS_SHUTDOWN = 1;
+  // NRF_TIMER0->TASKS_SHUTDOWN = 1;
+}
