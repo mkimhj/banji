@@ -8,6 +8,7 @@
 #include "boards.h"
 #include "gpio.h"
 #include "event.h"
+#include "timers.h"
 
 void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
 {

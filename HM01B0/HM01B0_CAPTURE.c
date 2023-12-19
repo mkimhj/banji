@@ -79,6 +79,8 @@ void hm01b0_init(void){
 void hm_peripheral_uninit(void)
 {
   spiSlaveDeInit();
+  nrf_drv_timer_disable(&CAM_TIMER);
+  CAM_TIMER.p_reg->TASKS_SHUTDOWN = 1;
 }
 
 void hm_peripheral_init(void)

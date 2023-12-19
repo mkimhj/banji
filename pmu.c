@@ -11,19 +11,19 @@
 #include "i2c.h"
 #include "timers.h"
 
-#define MAX77650_debug true
+#define MAX77650_debug false
 
 // Target Voltages
-#define TV_SBB0 0x1C // 1.5V
-#define TV_SBB1 0x20 // 2.8V  (can only go down to 2.4V)
-#define TV_SBB2 0x08 // 2.8V
-#define TV_LDO  0x74 // 2.8V
+#define TV_SBB0 0x3F // 2.8V CNFG_SBB0_A (this only goes up to 2.35)
+#define TV_SBB1 0x38 // 1.5V = 0x38  (can only go down to 2.4V) CNFG_SBB1_A
+#define TV_SBB2 0x14 // 1.8V CNFG_SBB2_A
+#define TV_LDO  0x50 // 2.35V
 
 // Charging Configuration
 #define CHG_CV    0x18  // 4.2 V fast-charge constant voltage.(CNFG_CHG_G: 0x1E)
 #define CHG_CC    0x01  // 15 mA fast-charge constant current.(CNFG_CHG_E: 0x1C)
 #define CHGIN_LIM 0b100 // 475 mA charge input current limit.(CNFG_CHG_B: 0x19)
-#define VSYS_REG  0x08  // 4.5V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
+#define VSYS_REG  0x08  // 4.3 V System Regulation Voltage  (CNFG_CHG_D: 0x1B)
 
 uint8_t MAX77650_read_register(uint8_t ADDR){
     return i2cRead8(MAX77651_I2C_ADDRESS, ADDR);
@@ -85,6 +85,12 @@ bool MAX77650_getTJ_REG_STAT(void){ //Returns Maximum Junction Temperature Regul
 
 uint8_t MAX77650_getTHM_DTLS(void){ //Returns Battery Temperature Details; Return Value: Battery Temperature Details
   return (MAX77650_read_register(MAX77650_STAT_CHG_A_ADDR) & 0b00000111);
+}
+
+bool pmuIsCharging(void)
+{
+  uint8_t val = ((MAX77650_read_register(MAX77650_STAT_CHG_B_ADDR) >> 2) & 0b11);
+  return (val == 0x3) ? true : false;
 }
 
 uint8_t MAX77650_getCHG_DTLS(void){ //Returns Charger Details
@@ -1112,28 +1118,30 @@ void pmu_init(void)
     MAX77650_setCHG_EN(true);
   }
 
+  bool activeDischarge = false;
+
   // Disable SIMO Buck-Boost Channel 0 Active-Discharge
   if (MAX77650_debug){
     NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 0 Active-Discharge: ");
-    pmu_print_error(MAX77650_setADE_SBB0(false));
+    pmu_print_error(MAX77650_setADE_SBB0(activeDischarge));
   }else{
-    MAX77650_setADE_SBB0(false);
+    MAX77650_setADE_SBB0(activeDischarge);
   }
 
   // Disable SIMO Buck-Boost Channel 1 Active-Discharge
   if (MAX77650_debug){
     NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 1 Active-Discharge: ");
-    pmu_print_error(MAX77650_setADE_SBB1(false));
+    pmu_print_error(MAX77650_setADE_SBB1(activeDischarge));
   }else{
-    MAX77650_setADE_SBB1(false);
+    MAX77650_setADE_SBB1(activeDischarge);
   }
 
   // Disable SIMO Buck-Boost Channel 2 Active-Discharge
   if (MAX77650_debug){
     NRF_LOG_RAW_INFO("Disable SIMO Buck-Boost Channel 2 Active-Discharge: ");
-    pmu_print_error(MAX77650_setADE_SBB2(false));
+    pmu_print_error(MAX77650_setADE_SBB2(activeDischarge));
   }else{
-    MAX77650_setADE_SBB2(false);
+    MAX77650_setADE_SBB2(activeDischarge);
   }
 
   // Set SIMO Buck-Boost Channel to maximum drive strength
@@ -1182,20 +1190,20 @@ void pmu_init(void)
   // SBBB1
   if (MAX77650_debug){
     NRF_LOG_RAW_INFO("Enable SBB1 Output to 2.8V: ");
-    pmu_print_error(MAX77650_setTV_SBB1(TV_SBB1)); //Set output Voltage of SBB1 to 2.8V
+    pmu_print_error(MAX77650_setTV_SBB1(TV_SBB1)); //Set output Voltage of SBB1 to 1.5V
     pmu_print_error(MAX77650_setEN_SBB1(0b110));
   }else{
-    MAX77650_setTV_SBB1(TV_SBB1); //Set output Voltage of SBB1 to 2.8V
+    MAX77650_setTV_SBB1(TV_SBB1); //Set output Voltage of SBB1 to 1.5V
     MAX77650_setEN_SBB1(0b110); // Enable
   }
 
   // SBB2
   if (MAX77650_debug){
     NRF_LOG_RAW_INFO("Enable SBB2 Output to 2.8V: ");
-    pmu_print_error(MAX77650_setTV_SBB2(TV_SBB2)); //Set output Voltage of SBB2 to 2.8V
+    pmu_print_error(MAX77650_setTV_SBB2(TV_SBB2)); //Set output Voltage of SBB2 to 1.8V
     pmu_print_error(MAX77650_setEN_SBB2(0b110)); //Enable
   }else{
-    MAX77650_setTV_SBB2(TV_SBB2); //Set output Voltage of SBB2 to 2.8V
+    MAX77650_setTV_SBB2(TV_SBB2); //Set output Voltage of SBB2 to 1.8V
     MAX77650_setEN_SBB2(0b110); //Enable SBB2
   }
 
@@ -1222,6 +1230,9 @@ void pmu_init(void)
 
   NRF_LOG_RAW_INFO("LDO Voltage: ");
   NRF_LOG_RAW_INFO(NRF_LOG_FLOAT_MARKER " V\n", NRF_LOG_FLOAT(MAX77650_getTV_LDO() * 0.0125 + 1.35));
+
+  // Disable LED Master
+  MAX77650_setEN_LED_MSTR(0);
 
 
   /*********** Global Interrupts ************/
