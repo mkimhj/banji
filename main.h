@@ -60,3 +60,4 @@
 // Stack
 #define DEAD_BEEF                       0xDEADBEEF                              /**< Value used as error code on stack dump, can be used to identify stack location on stack unwind. */
 void sleep_mode_enter(void);
+bool getIdleEntered(void);

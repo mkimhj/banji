@@ -101,6 +101,9 @@ void powerEnterSleepMode(void)
   // gpioWrite(LED1_PIN, 0);
   // gpioWrite(LED2_PIN, 0);
 
+  uint8_t data = 0;
+  imuWrite(0x7D, &data, 1, NULL);
+
   spiDeInit();
   delayMs(1);
 
@@ -111,7 +114,7 @@ void powerEnterSleepMode(void)
   gpioInterruptDisable(IMU_INT1_PIN);
   gpioDisable(IMU_INT1_PIN);
   gpioDisable(IMU_INT2_PIN);
-  
+
   // Camera
   cameraDeInit();
 
@@ -202,7 +205,7 @@ static void powerInit(void)
   ret_code_t err_code;
   err_code = nrf_pwr_mgmt_init();
   APP_ERROR_CHECK(err_code);
-  pmu_init();
+  // pmu_init();
   sd_power_dcdc_mode_set(true);
 }
 
@@ -238,12 +241,18 @@ static void banjiInit(void)
 
   powerInit();
 
-  imuInit();
-  imuSetupInterrupt();
+  // imuInit();
+  // imuSetupInterrupt();
   bleInit();
   bleAdvertisingStart();
 
   NRF_LOG_RAW_INFO("%08d [banji] booted\n", systemTimeGetMs());
+}
+
+static bool idleEntered = false;
+
+bool getIdleEntered(void) {
+  return idleEntered;
 }
 
 static void processQueue(void)
@@ -331,7 +340,7 @@ static void processQueue(void)
           app_timer_stop(buttonReleaseTimer);
 
           // TODO: Comment this back in once Gesture code is complete
-          //app_timer_start(buttonReleaseTimer, APP_TIMER_TICKS(3000), buttonReleaseTimerCallback);
+          app_timer_start(buttonReleaseTimer, APP_TIMER_TICKS(3000), buttonReleaseTimerCallback);
         }
 
         break;
@@ -390,6 +399,8 @@ static void processQueue(void)
         break;
 
       case EVENT_STOP_SENSORS:
+        resetButtonWasPressed();
+        idleEntered = true;
         imuDisable();
         cameraEnableStandbyMode(true);
         break;

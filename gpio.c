@@ -10,14 +10,29 @@
 #include "event.h"
 #include "timers.h"
 
-void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
-{
-  eventQueuePush(EVENT_BUTTON_STATE_CHANGED);
-}
+static bool buttonWasPressed = false;
 
 bool buttonPressed(void)
 {
   return (gpioRead(BUTTON_PIN) == 0);
+}
+
+void buttonInterruptHandler(nrf_drv_gpiote_pin_t pin, nrf_gpiote_polarity_t action)
+{
+  if (buttonPressed())
+  {
+    buttonWasPressed = true;
+  }
+  eventQueuePush(EVENT_BUTTON_STATE_CHANGED);
+}
+
+void resetButtonWasPressed(void) {
+  buttonWasPressed = false;
+}
+
+bool buttonGetWasPressed(void)
+{
+  return buttonWasPressed;
 }
 
 void gpioInit(void)
