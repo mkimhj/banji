@@ -2,7 +2,7 @@
 #include "nrf_gpio.h"
 #include "nrf_drv_gpiote.h"
 
-// #define FF 1
+#define FF 1
 #ifdef FF
   #define BUTTON_PIN                      NRF_GPIO_PIN_MAP(0, 15)
   #define CAM_PCLK_OUT_TO_MCU             NRF_GPIO_PIN_MAP(0, 19) // CAM_PCLK (SPI CLK)

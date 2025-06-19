@@ -610,7 +610,6 @@ void send(void)
     transmitSuccess = ble_cus_transmit(&m_cus, bleCusPacket, length);
 
     if (transmitSuccess) {
-
       ringBufferHead = (ringBufferHead + (length - cameraDataStartIndex)) % RING_BUFFER_SIZE;
       ringBufferBytesUsed -= (length - cameraDataStartIndex);
       sequenceNumber++;
